@@ -5,6 +5,7 @@ library(data.table)
 library(DT)
 library(shiny)
 library(shinyWidgets)
+library(bslib)
 library(tidytext)
 library(dplyr)
 library(plotly)
@@ -15,57 +16,97 @@ days_since_last_update <- as.integer(as.POSIXct(Sys.Date()) - as.POSIXct(max(ans
 years <- unique(ans[,.(lubridate::year(Date))]) |> unlist() |> sort(decreasing=TRUE) |> as.character()
 dups_present <- dim(ans[duplicated(Answer)])[1]>0
 
+main_theme <- bs_theme(
+  version = 5,
+  bg = "#222222",
+  fg = "#FFFFFF",
+  base_font = "Helvetica"
+)
 
-ui <- fluidPage(
+ui <- page_fluid(
   tags$head(
     # tags$link(rel = "stylesheet", type = "text/css", href = "styles.freelancer.css"),
     tags$title("Historical Wordle Answers")
   ),
-  tags$h1("Historical Wordle Answers", style = "text-align:center"),
+  theme = main_theme,
   br(),
-  tabsetPanel(
-    tabPanel(
+  tags$h1(
+    tags$span("Historical", style = "color:#3BC143"),
+    tags$span("Wordle", style = "color:#EDC001"),
+    tags$span("Answers", style = "color:#CCCCCC"),
+    style = "text-align:center; font-size:"
+  ),
+  br(),
+  navset_tab(
+    nav_panel(
       "Searchable Answers",
-      sidebarLayout(
-        sidebarPanel(
-          p("Positional Filters", style = "font-weight:bold; font-size:110%; text-align:center"),
-          selectInput(
-            inputId = "first_letter",
-            label = "1st Letter:",
-            choices = c("", LETTERS),
-            selected = "",
-            multiple = FALSE
+      br(),
+      tags$h1(
+        tags$span("Word List Filters", style = "color:#3BC143"),
+        tags$span(
+          actionButton(
+            inputId = "reset_filter",
+            label = "Reset Filters",
+            style = "background:#EDC001; color:#222222; font-weight:bold"
           ),
-          selectInput(
-            inputId = "second_letter",
-            label = "2nd Letter:",
-            choices = c("", LETTERS),
-            selected = "",
-            multiple = FALSE
-          ),
-          selectInput(
-            inputId = "third_letter",
-            label = "3rd Letter:",
-            choices = c("", LETTERS),
-            selected = "",
-            multiple = FALSE
-          ),
-          selectInput(
-            inputId = "fourth_letter",
-            label = "4th Letter:",
-            choices = c("", LETTERS),
-            selected = "",
-            multiple = FALSE
-          ),
-          selectInput(
-            inputId = "fifth_letter",
-            label = "5th Letter:",
-            choices = c("", LETTERS),
-            selected = "",
-            multiple = FALSE
-          ),
-          br(),
-          p("Date Filters", style = "font-weight:bold; font-size:110%; text-align:center"),
+          style = "text-align:right"
+        )
+      ),
+      accordion(
+        open = FALSE,
+        multiple = FALSE,
+        accordion_panel(
+          "By Letter Position",
+          fluidRow(
+            column(2,
+               selectizeInput(
+                 inputId = "first_letter",
+                 label = "1st:",
+                 choices = c("", LETTERS),
+                 selected = "",
+                 multiple = FALSE
+               )
+            ),
+            column(2,
+              selectizeInput(
+                inputId = "second_letter",
+                label = "2nd:",
+                choices = c("", LETTERS),
+                selected = "",
+                multiple = FALSE
+              )
+            ),
+            column(2,
+              selectizeInput(
+                inputId = "third_letter",
+                label = "3rd:",
+                choices = c("", LETTERS),
+                selected = "",
+                multiple = FALSE
+              )
+            ),
+            column(2,
+              selectizeInput(
+                inputId = "fourth_letter",
+                label = "4th:",
+                choices = c("", LETTERS),
+                selected = "",
+                multiple = FALSE
+              )
+            ),
+            column(2,
+              selectizeInput(
+                inputId = "fifth_letter",
+                label = "5th:",
+                choices = c("", LETTERS),
+                selected = "",
+                multiple = FALSE
+              )
+            )
+          )
+        ),
+        accordion_panel(
+          "By Date",
           dateRangeInput(
             inputId = "date_range",
             label = "Date Range",
@@ -74,59 +115,59 @@ ui <- fluidPage(
           ),
           selectInput(
             inputId = "year_filter",
-            label = "Year",
+            label = "Specific Year",
             choices = c("", years),
             selected = "",
             multiple = FALSE
-          ),
-          br(),
+          )
+        ),
+        accordion_panel(
+          "Repeated Answer Words",
           shinyWidgets::materialSwitch(
             inputId = "check_dups",
-            label = "Check for Repeats",
+            label = NULL,
             value = FALSE,
           ),
-          if(!dups_present){tags$p(paste0("No repeats as of ",Sys.Date()), style = "font-size:90%")},
-          br(),
-          br(),
-          actionButton(
-            inputId = "reset_filter",
-            label = "Reset Filters",
-            style = "background:#f28482; color:white; font-weight:bold"
-          ),
-          width = 3,
-          style = "font-color:white"
-        ), # close sidebarPanel
-        mainPanel(
-          br(),
-          tags$p(paste0("The answer list is updated periodically. Last update: ",max(ans$Date)," (",days_since_last_update,ifelse(days_since_last_update<=1," day ago)."," days ago)."))),
-          br(),
-          column(
-            8,
-            tags$h2("Answer List"),
-            fluidRow(DTOutput("answer_table")),
-            br(),
-            tags$h2("Letter Frequency"),
-            fluidRow(plotlyOutput("letter_freq"))
+          if(!dups_present){tags$p(paste0("Note: No repeats identified as of ",Sys.Date()), style = "font-size:90%")},
+        ),
+        br()
+      ),
+      br(),
+      tags$h1("Word List Analysis", style = "color:#3BC143"),
+      tags$p(paste0("The answer list is updated periodically. Last update: ",max(ans$Date)," (",days_since_last_update,ifelse(days_since_last_update<=1," day ago)."," days ago)."))),
+      accordion(
+        open = TRUE,
+        accordion_panel(
+          "Searchable Word Table",
+          column(6,
+            DTOutput("answer_table")
           )
-        ) # close mainPanel
-      ) # close sidebarLayout
-    ), # close tabPanel for Historicals
-    tabPanel(
+        ),
+        accordion_panel(
+          "Character Frequency",
+          card(
+            plotlyOutput("letter_freq")
+          )
+        ),
+        br()
+      )
+    ), # close nav_panel
+    nav_panel(
       "About",
-      column(5,
+      column(8,
         br(),
         p("Hi! Thanks for visiting!"),
-        tags$span("Occasionally, in the game "),
-        tags$a(href="https://www.nytimes.com/games/wordle","Wordle,"),
-        tags$span(" I find myself wanting to know if a word was previously used or if a Wordle answer has ever been repeated. Ya know, fun stuff you think of while riding a rollercoaster."),
+        tags$span("Occasionally, in the puzzle game "),
+        tags$a(href="https://www.nytimes.com/games/wordle","Wordle,", style = "color:#3BC143"),
+        tags$span(" I find myself wanting to know if a word was previously used or if a Wordle answer has ever been repeated. Ya know, fun stuff you think about while riding a rollercoaster."),
         p(),
         p("I find it de-motivating to visit ad-bloated websites to wade through multi-paragraph lead-ins to only have to scan an ever growing list of words. So, I decided to make a lightweight and data-focused website instead that can do this for me -- and now also you!"),
         p("I plan to update this list every couple of weeks, assuming the hubbub of life doesn't get the best of me. If I can figure out a way to create a feedback form, I'll add one and then you can nag me to update."),
         tags$span("Happy Wordle-ing!", style="font-weight:bold; font-size:110%"),
         tags$span(" (let's pretend that's a thing normal people say)", style="font-size:80%")
       )
-    ) # close tabPanel for About
-  ) # close tabsetPanel
+    ) # close nav_panel About
+  ) # close navset_panel
 )
 
 # Define server logic required to draw a histogram
@@ -183,8 +224,9 @@ server <- function(input, output, session) {
           autoWidth=TRUE,
           pageLength=10,
           language = list(search = 'Full Text Search:')
-        )
-      )
+        )) |>
+        formatStyle(columns = names(dt())[1], color = "#EDC001") |>
+        formatStyle(columns = names(dt())[2], color = "#3BC143")
     }
 
   )
@@ -192,13 +234,27 @@ server <- function(input, output, session) {
   output$letter_freq <- renderPlotly({
     letter_counts <- dt() |>
       unnest_tokens(char,Answer,"characters") |>
-      mutate(position = forcats::fct_inorder(rep(c("1st letter","2nd letter","3rd letter","4th letter","5th letter"), dim(dt())[1]))) |>
+      mutate(
+        char = toupper(char),
+        position = forcats::fct(
+          rep(c("1st","2nd","3rd","4th","5th"), dim(dt())[1]),
+          c("5th","4th","3rd","2nd","1st")
+        )
+      ) |>
       group_by(char, position) |>
       reframe(n = n())
 
     if(dim(letter_counts)[1]>0){
       plot_ly(letter_counts, x = ~char, y = ~n, color = ~position, type = "bar") |>
-        layout(barmode = "stack")
+        layout(
+          barmode = "stack",
+          yaxis = list(title = "Frequency of Occurance", color = "#CCCCCC"),
+          xaxis = list(title = "Letters", color = "#CCCCCC"),
+          legend = list(title = list(text="<b>Letter Position</b>", font = list(color="#CCCCCC")),
+                        font = list(color="#CCCCCC")),
+          paper_bgcolor = "#363636",
+          plot_bgcolor = "#363636"
+        )
     }
 
   })
@@ -225,23 +281,23 @@ server <- function(input, output, session) {
     input$reset_filter,
     handlerExpr = {
 
-      updateSelectInput(
+      updateSelectizeInput(
         inputId = "first_letter",
         selected = ""
       )
-      updateSelectInput(
+      updateSelectizeInput(
         inputId = "second_letter",
         selected = ""
       )
-      updateSelectInput(
+      updateSelectizeInput(
         inputId = "third_letter",
         selected = ""
       )
-      updateSelectInput(
+      updateSelectizeInput(
         inputId = "fourth_letter",
         selected = ""
       )
-      updateSelectInput(
+      updateSelectizeInput(
         inputId = "fifth_letter",
         selected = ""
       )
