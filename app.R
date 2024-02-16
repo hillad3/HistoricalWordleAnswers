@@ -67,7 +67,7 @@ ui <- page_fluid(
     ),
     nav_panel(
       "About",
-      column(8,
+      column(8,asf
         br(),
         p("Hi! Thanks for visiting!"),
         p(
