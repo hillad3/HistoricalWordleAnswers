@@ -12,11 +12,14 @@ library(plotly)
 
 source("moduleWordList.R")
 
+sys_date <- as.Date(lubridate::with_tz(Sys.time(), "US/Eastern"), tz = "US/Eastern")
+
 ans <- fread("data/wordle_answers.csv")
 ans[,Date:=lubridate::mdy(Date)]
-ans <- ans[!(Date %in% Sys.Date())] # if applicable, exclude today's word to prevent spoilers
+ans <- ans[!(Date %in% sys_date)] # if applicable, exclude today's word to prevent spoilers
 
-days_since_last_update <- as.integer(as.POSIXct(Sys.Date()) - as.POSIXct(max(ans$Date)))
+
+days_since_last_update <- as.integer(as.POSIXct(sys_date) - as.POSIXct(max(ans$Date), tz = "EST"))
 years <- unique(ans[,.(lubridate::year(Date))]) |> unlist() |> sort(decreasing=TRUE) |> as.character()
 dups_present <- dim(ans[duplicated(Word)])[1]>0
 
@@ -34,7 +37,6 @@ main_theme <- bs_theme(
 
 ui <- page_fluid(
   tags$head(
-    # tags$link(rel = "stylesheet", type = "text/css", href = "styles.freelancer.css"),
     tags$title("Historical Wordle Answers")
   ),
   theme = main_theme,
@@ -43,13 +45,13 @@ ui <- page_fluid(
     tags$span("Historical", style = "color:#3BC143"),
     tags$span("Wordle", style = "color:#EDC001"),
     tags$span("Answers", style = "color:#CCCCCC"),
-    style = "text-align:center; font-size:"
+    style = "text-align:center;"
   ),
   br(),
   navset_tab(
     nav_panel(
       "Wordle Answers",
-      modWordListUI("wordle",ans,years,dups_present,days_since_last_update,TRUE,TRUE)
+      modWordListUI("wordle",ans,sys_date,years,dups_present,days_since_last_update,TRUE,TRUE)
     ), # close nav_panel
     nav_panel(
       "5-Letter Scrabble Words",
@@ -67,7 +69,7 @@ ui <- page_fluid(
     ),
     nav_panel(
       "About",
-      column(8,asf
+      column(8,
         br(),
         p("Hi! Thanks for visiting!"),
         p(
@@ -77,9 +79,9 @@ ui <- page_fluid(
           tags$span(" Ya know, fun stuff you think about while riding a rollercoaster.")
         ),
         p(),
-        p("I'm not a fan of visiting ad-bloated websites to wade through multi-paragraph lead-ins (like this one?) to only have to scan an ever growing list of words. So, I decided to make a lightweight and data-focused website that can do this for me -- and now also you!"),
+        p("I'm not a fan of visiting ad-bloated websites to wade through multi-paragraph lead-ins (like this one?) only to have to scan an ever growing list of words. So, I decided to make a lightweight and data-focused website that can help me in this endeavour -- and now also you!"),
         p(
-          tags$span("For anyone curious, this website was built using the {shiny} package in R, along with Bootstrap 5 using {bslib}."),
+          tags$span("For the R enthusiasts, this website was built using the {shiny} package in R, along with Bootstrap 5 using {bslib}."),
           tags$span("Tables were created with the {data.table} package and rendered with the {DT} package."),
           tags$span("The interactive graphs were created in {plotly} using tokenization with {tidytext}."),
           tags$span("Its code is available on my github, "),
@@ -87,7 +89,8 @@ ui <- page_fluid(
         ),
         p("I plan to update this list every couple of weeks, assuming the hubbub of life doesn't get the best of me. If I can figure out a way to create a feedback form, I'll add one and then you can nag me to update."),
         tags$span("Happy Wordle-ing!", style="font-weight:bold; font-size:110%"),
-        tags$span(" (let's pretend that's a thing normal people say)", style="font-size:80%")
+        tags$span(" (let's pretend that's a thing normal people say)", style="font-size:80%"),
+        br()
       )
     ) # close nav_panel About
   ) # close navset_panel
@@ -96,8 +99,8 @@ ui <- page_fluid(
 # Define server logic required to draw a histogram
 server <- function(input, output, session) {
 
-  modWordListServer("wordle",ans,TRUE,TRUE)
-  modWordListServer("scrabble",five_letter_words,FALSE,FALSE)
+  modWordListServer("wordle",ans,sys_date,TRUE,TRUE)
+  modWordListServer("scrabble",five_letter_words,sys_date,FALSE,FALSE)
 
 }
 

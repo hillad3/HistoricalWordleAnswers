@@ -1,6 +1,7 @@
 
 modWordListUI <- function(id,
                           dt_words,
+                          sys_date_,
                           years_,
                           dups_present_,
                           days_since_last_update_,
@@ -80,7 +81,7 @@ modWordListUI <- function(id,
               inputId = NS(id,"date_range"),
               label = "Date Range",
               start = "2021-06-19",
-              end = Sys.Date()
+              end = sys_date_
             ),
             selectInput(
               inputId = NS(id,"year_filter"),
@@ -103,7 +104,7 @@ modWordListUI <- function(id,
               label = NULL,
               value = FALSE,
             ),
-            if(!dups_present_){tags$p(paste0("Note: No repeats identified as of ",Sys.Date()), style = "font-size:90%")},
+            if(!dups_present_){tags$p(paste0("Note: No repeats identified as of ",max(dt_words$Date)), style = "font-size:90%")},
           )
         } else {
           div()
@@ -135,7 +136,7 @@ modWordListUI <- function(id,
   )
 }
 
-modWordListServer <- function(id, dt_words, use_date_filters = FALSE, use_repeat_toggle = FALSE){
+modWordListServer <- function(id, dt_words, sys_date_, use_date_filters = FALSE, use_repeat_toggle = FALSE){
   moduleServer(
     id,
     function(input, output, session){
@@ -238,7 +239,7 @@ modWordListServer <- function(id, dt_words, use_date_filters = FALSE, use_repeat
             updateDateRangeInput(
               inputId = "date_range",
               start = "2021-06-19",
-              end = Sys.Date()
+              end = sys_date_
             )
           } else {
             updateDateRangeInput(
@@ -284,7 +285,7 @@ modWordListServer <- function(id, dt_words, use_date_filters = FALSE, use_repeat
               session,
               inputId = "date_range",
               start = "2021-06-19",
-              end = Sys.Date()
+              end = sys_date_
             )
             updateSelectInput(
               session,
