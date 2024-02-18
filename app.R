@@ -12,14 +12,39 @@ library(plotly)
 
 source("moduleWordList.R")
 
+tryCatch(
+  expr = {
+    con <- DBI::dbConnect(
+      drv = RPostgres::Postgres(),
+      dbname = Sys.getenv("dbname"),
+      host = Sys.getenv("host"),
+      port = Sys.getenv("port"),
+      user = Sys.getenv("userid"),
+      password = Sys.getenv("pwd")
+    )
+
+    ans <- DBI::dbReadTable(con, "wordle") |> as.data.table()
+
+    DBI::dbDisconnect(con)
+    rm(con)
+  },
+  error = function(e){
+    ans <- fread("data/wordle_answers.csv")
+  },
+  warning = function(w){
+    ans <- fread("data/wordle_answers.csv")
+  }
+)
+
+
+
 sys_date <- as.Date(lubridate::with_tz(Sys.time(), "US/Eastern"), tz = "US/Eastern")
 
-ans <- fread("data/wordle_answers.csv")
 ans[,Date:=lubridate::mdy(Date)]
 ans <- ans[!(Date %in% sys_date)] # if applicable, exclude today's word to prevent spoilers
-max_date <- max(ans$Date)
 
-days_since_last_update <- as.integer(as.POSIXct(sys_date) - as.POSIXct(max_date, tz = "EST"))
+
+days_since_last_update <- as.integer(as.POSIXct(sys_date) - as.POSIXct(max(ans$Date), tz = "EST"))
 years <- unique(ans[,.(lubridate::year(Date))]) |> unlist() |> sort(decreasing=TRUE) |> as.character()
 dups_present <- dim(ans[duplicated(Word)])[1]>0
 
@@ -51,7 +76,7 @@ ui <- page_fluid(
   navset_tab(
     nav_panel(
       "Wordle Answers",
-      modWordListUI("wordle",ans,max_date,years,dups_present,days_since_last_update,TRUE,TRUE)
+      modWordListUI("wordle",ans,sys_date,years,dups_present,days_since_last_update,TRUE,TRUE)
     ), # close nav_panel
     nav_panel(
       "5-Letter Scrabble Words",
@@ -99,8 +124,8 @@ ui <- page_fluid(
 # Define server logic required to draw a histogram
 server <- function(input, output, session) {
 
-  modWordListServer("wordle",ans,max_date,TRUE,TRUE)
-  modWordListServer("scrabble",five_letter_words,max_date,FALSE,FALSE)
+  modWordListServer("wordle",ans,sys_date,TRUE,TRUE)
+  modWordListServer("scrabble",five_letter_words,sys_date,FALSE,FALSE)
 
 }
 
