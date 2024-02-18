@@ -17,9 +17,9 @@ sys_date <- as.Date(lubridate::with_tz(Sys.time(), "US/Eastern"), tz = "US/Easte
 ans <- fread("data/wordle_answers.csv")
 ans[,Date:=lubridate::mdy(Date)]
 ans <- ans[!(Date %in% sys_date)] # if applicable, exclude today's word to prevent spoilers
+max_date <- max(ans$Date)
 
-
-days_since_last_update <- as.integer(as.POSIXct(sys_date) - as.POSIXct(max(ans$Date), tz = "EST"))
+days_since_last_update <- as.integer(as.POSIXct(sys_date) - as.POSIXct(max_date, tz = "EST"))
 years <- unique(ans[,.(lubridate::year(Date))]) |> unlist() |> sort(decreasing=TRUE) |> as.character()
 dups_present <- dim(ans[duplicated(Word)])[1]>0
 
@@ -51,7 +51,7 @@ ui <- page_fluid(
   navset_tab(
     nav_panel(
       "Wordle Answers",
-      modWordListUI("wordle",ans,sys_date,years,dups_present,days_since_last_update,TRUE,TRUE)
+      modWordListUI("wordle",ans,max_date,years,dups_present,days_since_last_update,TRUE,TRUE)
     ), # close nav_panel
     nav_panel(
       "5-Letter Scrabble Words",
@@ -90,7 +90,7 @@ ui <- page_fluid(
         p("I plan to update this list every couple of weeks, assuming the hubbub of life doesn't get the best of me. If I can figure out a way to create a feedback form, I'll add one and then you can nag me to update."),
         tags$span("Happy Wordle-ing!", style="font-weight:bold; font-size:110%"),
         tags$span(" (let's pretend that's a thing normal people say)", style="font-size:80%"),
-        br()
+        p("", style="margin-bottom:25px")
       )
     ) # close nav_panel About
   ) # close navset_panel
@@ -99,8 +99,8 @@ ui <- page_fluid(
 # Define server logic required to draw a histogram
 server <- function(input, output, session) {
 
-  modWordListServer("wordle",ans,sys_date,TRUE,TRUE)
-  modWordListServer("scrabble",five_letter_words,sys_date,FALSE,FALSE)
+  modWordListServer("wordle",ans,max_date,TRUE,TRUE)
+  modWordListServer("scrabble",five_letter_words,max_date,FALSE,FALSE)
 
 }
 
