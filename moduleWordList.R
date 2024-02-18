@@ -1,7 +1,7 @@
 
 modWordListUI <- function(id,
                           dt_words,
-                          sys_date_,
+                          max_date_,
                           years_,
                           dups_present_,
                           days_since_last_update_,
@@ -81,7 +81,7 @@ modWordListUI <- function(id,
               inputId = NS(id,"date_range"),
               label = "Date Range",
               start = "2021-06-19",
-              end = sys_date_
+              end = max_date_
             ),
             selectInput(
               inputId = NS(id,"year_filter"),
@@ -136,7 +136,7 @@ modWordListUI <- function(id,
   )
 }
 
-modWordListServer <- function(id, dt_words, sys_date_, use_date_filters = FALSE, use_repeat_toggle = FALSE){
+modWordListServer <- function(id, dt_words, max_date_, use_date_filters = FALSE, use_repeat_toggle = FALSE){
   moduleServer(
     id,
     function(input, output, session){
@@ -239,7 +239,7 @@ modWordListServer <- function(id, dt_words, sys_date_, use_date_filters = FALSE,
             updateDateRangeInput(
               inputId = "date_range",
               start = "2021-06-19",
-              end = sys_date_
+              end = max_date_
             )
           } else {
             updateDateRangeInput(
@@ -285,7 +285,7 @@ modWordListServer <- function(id, dt_words, sys_date_, use_date_filters = FALSE,
               session,
               inputId = "date_range",
               start = "2021-06-19",
-              end = sys_date_
+              end = max_date_
             )
             updateSelectInput(
               session,
