@@ -40,6 +40,7 @@ tryCatch(
 
 sys_date <- as.Date(lubridate::with_tz(Sys.time(), "US/Eastern"), tz = "US/Eastern")
 
+setorder(ans, -Index) # add this step since the procedure to update the db with wordle answers does not use ORDER BY
 ans[,Date:=lubridate::mdy(Date)]
 ans <- ans[!(Date %in% sys_date)] # if applicable, exclude today's word to prevent spoilers
 
