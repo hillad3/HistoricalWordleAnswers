@@ -25,9 +25,7 @@ if(dim(new_ans)[1]==0){
 } else {
   # create temp table and then insert into
 
-  dbWriteTable(con, "tmp", new_ans, overwrite=TRUE)
-  dbWriteTable(con, "wordle", "tmp", append=TRUE)
-  dbRemoveTable(con, "tmp")
+  dbWriteTable(con, "wordle", new_ans, append=TRUE)
   dbDisconnect(con)
 
 }
