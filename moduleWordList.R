@@ -1,6 +1,6 @@
 
 modWordListUI <- function(id,
-                          dt_words,
+                          dt_words_,
                           max_date_,
                           years_,
                           dups_present_,
@@ -27,49 +27,49 @@ modWordListUI <- function(id,
         "By Letter Position",
         fluidRow(
           column(2,
-           selectizeInput(
-             inputId = NS(id,"first_letter"),
-             label = "1st:",
-             choices = c("", LETTERS),
-             selected = "",
-             multiple = FALSE
-           )
+                 selectizeInput(
+                   inputId = NS(id,"first_letter"),
+                   label = "1st:",
+                   choices = c("", LETTERS),
+                   selected = "",
+                   multiple = FALSE
+                 )
           ),
           column(2,
-           selectizeInput(
-             inputId = NS(id,"second_letter"),
-             label = "2nd:",
-             choices = c("", LETTERS),
-             selected = "",
-             multiple = FALSE
-           )
+                 selectizeInput(
+                   inputId = NS(id,"second_letter"),
+                   label = "2nd:",
+                   choices = c("", LETTERS),
+                   selected = "",
+                   multiple = FALSE
+                 )
           ),
           column(2,
-           selectizeInput(
-             inputId = NS(id,"third_letter"),
-             label = "3rd:",
-             choices = c("", LETTERS),
-             selected = "",
-             multiple = FALSE
-           )
+                 selectizeInput(
+                   inputId = NS(id,"third_letter"),
+                   label = "3rd:",
+                   choices = c("", LETTERS),
+                   selected = "",
+                   multiple = FALSE
+                 )
           ),
           column(2,
-           selectizeInput(
-             inputId = NS(id,"fourth_letter"),
-             label = "4th:",
-             choices = c("", LETTERS),
-             selected = "",
-             multiple = FALSE
-           )
+                 selectizeInput(
+                   inputId = NS(id,"fourth_letter"),
+                   label = "4th:",
+                   choices = c("", LETTERS),
+                   selected = "",
+                   multiple = FALSE
+                 )
           ),
           column(2,
-           selectizeInput(
-             inputId = NS(id,"fifth_letter"),
-             label = "5th:",
-             choices = c("", LETTERS),
-             selected = "",
-             multiple = FALSE
-           )
+                 selectizeInput(
+                   inputId = NS(id,"fifth_letter"),
+                   label = "5th:",
+                   choices = c("", LETTERS),
+                   selected = "",
+                   multiple = FALSE
+                 )
           )
         )
       ),
@@ -92,7 +92,7 @@ modWordListUI <- function(id,
             )
           )
         } else {
-         div()
+          div()
         }
       ),
       tagList(
@@ -104,7 +104,7 @@ modWordListUI <- function(id,
               label = NULL,
               value = FALSE,
             ),
-            if(!dups_present_){tags$p(paste0("Note: No repeats identified as of ",max(dt_words$Date)), style = "font-size:90%")},
+            if(!dups_present_){tags$p(paste0("Note: No repeats identified as of ",max(dt_words_$Date)), style = "font-size:90%")},
           )
         } else {
           div()
@@ -114,15 +114,20 @@ modWordListUI <- function(id,
     br(),
     br(),
     tags$h1("Word List Analysis", style = "color:#3BC143"),
-    if("Date" %in% names(dt_words)){
-      tags$p(paste0("The answer list is updated periodically. Last update: ",max(dt_words$Date)," (",days_since_last_update_,ifelse(days_since_last_update_<=1," day ago)."," days ago).")))
+    if("Date" %in% names(dt_words_)){
+      tags$p(paste0(
+        "The answer list is updated periodically. Most recent answer from: ",
+        max(dt_words_$Date)," (",
+        days_since_last_update_,
+        ifelse(days_since_last_update_<=1," day ago)."," days ago)."),
+        " Today's word is automatically not displayed to prevent spoilers."))
     },
     accordion(
       open = TRUE,
       accordion_panel(
         paste(stringr::str_to_title(id), " Word Table"),
         column(6,
-          DTOutput(NS(id,"word_list_table"))
+               DTOutput(NS(id,"word_list_table"))
         )
       ),
       accordion_panel(
@@ -136,7 +141,7 @@ modWordListUI <- function(id,
   )
 }
 
-modWordListServer <- function(id, dt_words, max_date_, use_date_filters = FALSE, use_repeat_toggle = FALSE){
+modWordListServer <- function(id, dt_words_, max_date_, use_date_filters = FALSE, use_repeat_toggle = FALSE){
   moduleServer(
     id,
     function(input, output, session){
@@ -165,7 +170,7 @@ modWordListServer <- function(id, dt_words, max_date_, use_date_filters = FALSE,
         }
 
         # logger::log_info(tmp)
-        dt <- dt_words[stringr::str_detect(Word, tmp)]
+        dt <- dt_words_[stringr::str_detect(Word, tmp)]
 
         if(use_date_filters){
           dt <- dt[Date >= input$date_range[1] & Date <= input$date_range[2]]
