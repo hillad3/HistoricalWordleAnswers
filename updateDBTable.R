@@ -19,7 +19,7 @@ db_ans <- dbReadTable(con, "wordle") |> as.data.table()
 
 new_ans <- local_ans[!(Word %in% db_ans$Word)]
 
-overwrite_table <- TRUE
+overwrite_table <- FALSE
 
 if(dim(new_ans)[1]==0){
   # do nothing and close connection
@@ -32,6 +32,6 @@ if(dim(new_ans)[1]==0){
 
 } else {
 
-  dbWriteTable(con, "wordle", db_ans, new_ans, append=TRUE)
+  dbWriteTable(con, "wordle", new_ans, append=TRUE)
   dbDisconnect(con)
 }
