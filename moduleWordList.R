@@ -25,52 +25,14 @@ modWordListUI <- function(id,
       multiple = FALSE,
       accordion_panel(
         "By Letter Position",
-        fluidRow(
-          column(2,
-                 selectizeInput(
-                   inputId = NS(id,"first_letter"),
-                   label = "1st:",
-                   choices = c("", LETTERS),
-                   selected = "",
-                   multiple = FALSE
-                 )
-          ),
-          column(2,
-                 selectizeInput(
-                   inputId = NS(id,"second_letter"),
-                   label = "2nd:",
-                   choices = c("", LETTERS),
-                   selected = "",
-                   multiple = FALSE
-                 )
-          ),
-          column(2,
-                 selectizeInput(
-                   inputId = NS(id,"third_letter"),
-                   label = "3rd:",
-                   choices = c("", LETTERS),
-                   selected = "",
-                   multiple = FALSE
-                 )
-          ),
-          column(2,
-                 selectizeInput(
-                   inputId = NS(id,"fourth_letter"),
-                   label = "4th:",
-                   choices = c("", LETTERS),
-                   selected = "",
-                   multiple = FALSE
-                 )
-          ),
-          column(2,
-                 selectizeInput(
-                   inputId = NS(id,"fifth_letter"),
-                   label = "5th:",
-                   choices = c("", LETTERS),
-                   selected = "",
-                   multiple = FALSE
-                 )
-          )
+        textInput(
+         inputId = NS(id,"regex_str"),
+         label = "Enter RegEx:",
+         value=""
+        ),
+        tags$p("See tab for more details on using RegEx."),
+        textOutput(
+          outputId = NS(id, "regex_error")
         )
       ),
       tagList(
@@ -145,32 +107,24 @@ modWordListServer <- function(id, dt_words_, max_date_, use_date_filters = FALSE
   moduleServer(
     id,
     function(input, output, session){
+
+      re <- reactive(
+        if(is.null(input$regex_str) | input$regex_str==""){
+          "."
+        } else {
+          str_to_upper(input$regex_str)
+        }
+      )
+
       dt <- reactive({
 
-        tmp <- "....."
+        # logger::log_info(re())
 
-        if(input$first_letter %in% LETTERS){
-          tmp <- paste0(input$first_letter,substr(tmp,2,5))
-        }
+        dt <- tryCatch(
+          expr = {dt_words_[str_detect(Word, re())]},
+          error = function(e){dt_words_[Word=="12345"]}
+        )
 
-        if(input$second_letter %in% LETTERS){
-          tmp <- paste0(substr(tmp,1,1),input$second_letter,substr(tmp,3,5))
-        }
-
-        if(input$third_letter %in% LETTERS){
-          tmp <- paste0(substr(tmp,1,2),input$third_letter,substr(tmp,4,5))
-        }
-
-        if(input$fourth_letter %in% LETTERS){
-          tmp <- paste0(substr(tmp,1,3),input$fourth_letter,substr(tmp,5,5))
-        }
-
-        if(input$fifth_letter %in% LETTERS){
-          tmp <- paste0(substr(tmp,1,4),input$fifth_letter)
-        }
-
-        # logger::log_info(tmp)
-        dt <- dt_words_[stringr::str_detect(Word, tmp)]
 
         if(use_date_filters){
           dt <- dt[Date >= input$date_range[1] & Date <= input$date_range[2]]
@@ -260,31 +214,12 @@ modWordListServer <- function(id, dt_words_, max_date_, use_date_filters = FALSE
         input$reset_filter,
         handlerExpr = {
 
-          updateSelectizeInput(
+          updateTextInput(
             session,
-            inputId = "first_letter",
-            selected = ""
+            inputId = "regex_str",
+            value = ""
           )
-          updateSelectizeInput(
-            session,
-            inputId = "second_letter",
-            selected = ""
-          )
-          updateSelectizeInput(
-            session,
-            inputId = "third_letter",
-            selected = ""
-          )
-          updateSelectizeInput(
-            session,
-            inputId = "fourth_letter",
-            selected = ""
-          )
-          updateSelectizeInput(
-            session,
-            inputId = "fifth_letter",
-            selected = ""
-          )
+
           if(use_date_filters){
             updateDateRangeInput(
               session,

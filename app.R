@@ -9,6 +9,7 @@ library(bslib)
 library(tidytext)
 library(dplyr)
 library(plotly)
+library(stringr)
 
 source("moduleWordList.R")
 
@@ -112,6 +113,41 @@ ui <- page_fluid(
       ),
       br(),
       modWordListUI("scrabble",five_letter_words,years,dups_present,days_since_last_update,FALSE,FALSE)
+    ),
+    nav_panel(
+      "More about using RegEx",
+      column(
+        width = 8,
+        tags$p(),
+        tags$p("The letter filters use Regular Expression ('RegEx') to pair down the word list. A RegEx is a character sequence that defines a search pattern. Although powerful, they can take a little getting used to, so below are some examples of its functionality and special characters to consider when constructing one:"),
+        tags$ul(
+          tags$li("While Regex's are typically case sensitive, everything will be converted to capitals before parsing."),
+          tags$li("Any sequence of letters will be considered regardless of its position in a word. For example, 'EF' will match with both GRIEF and CLEFT."),
+          tags$li("A wildcard can be indicated with a period '.'. For example, '...EF' will match with both GRIEF but not CLEFT because the RegEx requires at least three letters preceding the EF."),
+          tags$li("The start boundary of a word can be indicated with a carrot '^'. For example, '^F' will match with FORCE but not GRIEF."),
+          tags$li("The end boundary of a word can be indicated with a dollar sign '$'. For example, 'F$' will match with GRIEF but not FORCE."),
+          tags$li("A logical OR relationship can be indicated with a pipe '|'. For example, '^F|F$' will match with both FORCE and GRIEF because the F can be at the start or end of the word."),
+          tags$li("A 'one of' relationship can be indicated within square brackets '[]'. For example, '^[ABC]' will match any word starting with A, B or C."),
+          tags$li("A 'one or more' relationship can be indicated with a '+'. For example, 'BE+' will match both MAYBE and BEEFY."),
+          tags$li("A 'zero or one' relationship can be indicated with a '?'. For example, 'AC?T' will make the C optional, so it will match both ACTOR and SPLAT."),
+          tags$li("A 'zero or more' relationship can be indicated with a '*'. For example, 'UE*' will match ACUTE, ARGUE, and QUEEN."),
+          tags$li("A quantifer can be indicated with curly brackets '{}'. For example, 'E{2}' will BEEFY and STEEL."),
+          tags$li("A range of letters can be indicated with a dash inside square brackets. For example, '[Q-S]....' would match any word starting with a letter between Q and S."),
+          tags$li("A RegEx can be grouped using parentheses '()'. For example, '(ABO..)|(BOA)|(AO)' would return a list of 5-letter words that includes ABOARD, BOAST, and AORTA.")
+        ),
+        tags$p(
+          tags$span("There are even more powerful features of regex but they aren't really useful when dealing with a list of single words. You can find out more about RegEx rules that I based this on "),
+          tags$a(href="https://rstudio.github.io/cheatsheets/html/strings.html#match-characters", "here", style = "color:#3BC143", .noWS="after"),
+          tags$span(".")
+        ),
+        tags$h3("Practical Considerations"),
+        tags$ul(
+          tags$li("Since Wordle answers are only 5 letters, you will usually be able to search simply using letters and the wildcard period '.'. Repeating the wildcard character five times '.....' will match with any word, 'F....' will match any word starting with F, '....F' will find any word ending in F, '.FF..' will find any double F word in position 2 and 3, and 'FL..F' will only find FLUFF because there are no other words matching that pattern."),
+          tags$li("If you know that the first two letters of an answer is ST and you know that the third position is not a K, then you could set the RegEx to '^ST[A-J|L-Z]'."),
+          tags$li("If you know that the first two letters of an answer is ST and you know that the third position is not a K and you'd like to indicate that the K is in the fourth or fifth position, then you could set the RegEx to '(^ST[A-J|L-Z].K)|(^ST[A-J|L-Z]K.)'. Note: It is important to set up the two Regex in two complete Regexes. If instead you did '^ST[A-J|L-Z](.K)|(K.) it would get parsed as '^ST[A-J|L-Z].K' or 'K.', and since position doesn't matter the 'K.' would return any word with a K.")
+        ),
+        tags$p()
+      )
     ),
     nav_panel(
       "About",
