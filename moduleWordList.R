@@ -4,10 +4,27 @@ modWordListUI <- function(id,
                           max_date_,
                           years_,
                           dups_present_,
-                          days_since_last_update_,
-                          use_date_filters = FALSE,
-                          use_repeat_toggle = FALSE){
+                          days_since_last_update_){
   tagList(
+    br(),
+    tags$h1("Word List", style = "color:#3BC143"),
+    tags$p(paste0(
+      "Wordle Answer list updated ",
+      max(dt_words_[!is.na(Date)]$Date)," (",
+      days_since_last_update_,
+      ifelse(days_since_last_update_<=1," day ago)."," days ago)."),
+      " If applicable, today's word will automatically not be displayed to prevent spoilers.")
+    ),
+    accordion(
+      open = TRUE,
+      accordion_panel(
+        paste(stringr::str_to_title(id), " Word Table"),
+        column(6,
+          DTOutput(NS(id,"word_list_table"))
+        )
+      ),
+      br()
+    ),
     br(),
     tags$h1(
       tags$span("Word List Filters", style = "color:#3BC143"),
@@ -24,74 +41,44 @@ modWordListUI <- function(id,
       open = FALSE,
       multiple = FALSE,
       accordion_panel(
-        "By Letter Position",
+        "Advanced Filters",
         textInput(
          inputId = NS(id,"regex_str"),
-         label = "Enter RegEx:",
+         label = "By Letter (see RegEx tab for instructions):",
          value=""
         ),
-        tags$p("See tab for more details on using RegEx."),
-        textOutput(
-          outputId = NS(id, "regex_error")
-        )
-      ),
-      tagList(
-        if(use_date_filters){
-          accordion_panel(
-            "By Date",
-            dateRangeInput(
-              inputId = NS(id,"date_range"),
-              label = "Date Range",
-              start = "2021-06-19",
-              end = max_date_
-            ),
-            selectInput(
-              inputId = NS(id,"year_filter"),
-              label = "Specific Year",
-              choices = c("", years_),
-              selected = "",
-              multiple = FALSE
-            )
-          )
-        } else {
-          div()
-        }
-      ),
-      tagList(
-        if(use_repeat_toggle){
-          accordion_panel(
-            "Repeated Answer Words",
-            shinyWidgets::materialSwitch(
-              inputId = NS(id,"check_dups"),
-              label = NULL,
-              value = FALSE,
-            ),
-            if(!dups_present_){tags$p(paste0("Note: No repeats identified as of ",max(dt_words_$Date)), style = "font-size:90%")},
-          )
-        } else {
-          div()
-        }
+        dateRangeInput(
+          inputId = NS(id,"date_range"),
+          label = "By Date Range",
+          start = "2021-06-19",
+          end = max_date_
+        ),
+        selectInput(
+          inputId = NS(id,"year_filter"),
+          label = "By Specific Year",
+          choices = c("", years_),
+          selected = "",
+          multiple = FALSE
+        ),
+        shinyWidgets::materialSwitch(
+          inputId = NS(id,"include_scrabble_dict"),
+          label = "Include Scrabble words",
+          value = FALSE,
+        ),
+        shinyWidgets::materialSwitch(
+          inputId = NS(id,"check_dups"),
+          label = "Check for Duplicates",
+          value = FALSE,
+          inline = TRUE
+        ),
+        if(!dups_present_){tags$p(paste0("No repeats identified as of ",max(dt_words_[!is.na(Date)]$Date)), style = "font-size:90%")},
       )
     ),
     br(),
     br(),
-    tags$h1("Word List Analysis", style = "color:#3BC143"),
-    if("Date" %in% names(dt_words_)){
-      tags$p(paste0(
-        "The answer list is updated periodically. Most recent answer from: ",
-        max(dt_words_$Date)," (",
-        days_since_last_update_,
-        ifelse(days_since_last_update_<=1," day ago)."," days ago)."),
-        " Today's word is automatically not displayed to prevent spoilers."))
-    },
+    tags$h1("Word Analysis", style = "color:#3BC143"),
     accordion(
       open = TRUE,
-      accordion_panel(
-        paste(stringr::str_to_title(id), " Word Table"),
-        column(6,
-               DTOutput(NS(id,"word_list_table"))
-        )
-      ),
       accordion_panel(
         "Character Frequency",
         card(
@@ -103,7 +90,7 @@ modWordListUI <- function(id,
   )
 }
 
-modWordListServer <- function(id, dt_words_, max_date_, use_date_filters = FALSE, use_repeat_toggle = FALSE){
+modWordListServer <- function(id, dt_words_, max_date_){
   moduleServer(
     id,
     function(input, output, session){
@@ -125,15 +112,21 @@ modWordListServer <- function(id, dt_words_, max_date_, use_date_filters = FALSE
           error = function(e){dt_words_[Word=="12345"]}
         )
 
-
-        if(use_date_filters){
-          dt <- dt[Date >= input$date_range[1] & Date <= input$date_range[2]]
+        if(!input$include_scrabble_dict){
+          dt <- dt[(Date >= input$date_range[1] & Date <= input$date_range[2])]
+        } else {
+          dt <- dt[is.na(Date) | (Date >= input$date_range[1] & Date <= input$date_range[2])]
         }
 
-        if(use_repeat_toggle){
-          if(input$check_dups){
-            dt <- dt[duplicated(Word)]
-          }
+        if(input$include_scrabble_dict){
+          dt
+        } else {
+          dt <- dt[!is.na(Date)]
+          setorder(dt, -Index)
+        }
+
+        if(input$check_dups){
+          dt <- dt[duplicated(Word)]
         }
 
         dt
@@ -147,11 +140,11 @@ modWordListServer <- function(id, dt_words_, max_date_, use_date_filters = FALSE
         } else {
 
           if("Date" %in% names(dt())){
-            setnames(dt(), "Date", "Date (YYYY-MM-DD)")
+            setnames(dt(), old = c("Date","Index"), new=c("Answer Date (YYYY-MM-DD)","Wordle Index"))
           }
 
           DT::datatable(
-            dt()[,Index:=NULL],
+            dt(),
             options = list(
               autoWidth=TRUE,
               pageLength=10,
@@ -191,24 +184,23 @@ modWordListServer <- function(id, dt_words_, max_date_, use_date_filters = FALSE
 
       })
 
-      if(use_date_filters){
-        observeEvent(
-          input$year_filter,
-          if(input$year_filter==""){
-            updateDateRangeInput(
-              inputId = "date_range",
-              start = "2021-06-19",
-              end = max_date_
-            )
-          } else {
-            updateDateRangeInput(
-              inputId = "date_range",
-              start = paste0(input$year_filter,"-01-01"),
-              end = paste0(input$year_filter,"-12-31")
-            )
-          }
-        )
-      }
+
+      observeEvent(
+        input$year_filter,
+        if(input$year_filter==""){
+          updateDateRangeInput(
+            inputId = "date_range",
+            start = "2021-06-19",
+            end = max_date_
+          )
+        } else {
+          updateDateRangeInput(
+            inputId = "date_range",
+            start = paste0(input$year_filter,"-01-01"),
+            end = paste0(input$year_filter,"-12-31")
+          )
+        }
+      )
 
       observeEvent(
         input$reset_filter,
@@ -220,26 +212,30 @@ modWordListServer <- function(id, dt_words_, max_date_, use_date_filters = FALSE
             value = ""
           )
 
-          if(use_date_filters){
-            updateDateRangeInput(
-              session,
-              inputId = "date_range",
-              start = "2021-06-19",
-              end = max_date_
-            )
-            updateSelectInput(
-              session,
-              inputId = "year_filter",
-              selected = ""
-            )
-          }
-          if(use_repeat_toggle){
-            updateMaterialSwitch(
-              session,
-              inputId = "check_dups",
-              value = FALSE
-            )
-          }
+          updateDateRangeInput(
+            session,
+            inputId = "date_range",
+            start = "2021-06-19",
+            end = max_date_
+          )
+
+          updateSelectInput(
+            session,
+            inputId = "year_filter",
+            selected = ""
+          )
+
+          updateMaterialSwitch(
+            session,
+            inputId = "include_scrabble_dict",
+            value = FALSE
+          )
+
+          updateMaterialSwitch(
+            session,
+            inputId = "check_dups",
+            value = FALSE
+          )
         }
       )
 

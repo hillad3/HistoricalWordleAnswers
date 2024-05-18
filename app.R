@@ -53,7 +53,9 @@ dups_present <- dim(ans[duplicated(Word)])[1]>0
 
 five_letter_words <- fread("data/five_letter_scrabble_words.csv")
 five_letter_words[,Word:=toupper(Word)]
-five_letter_words[,`Past Wordle Answer`:=Word %in% ans$Word]
+
+ans <- ans[five_letter_words[,Index:=NULL], on = 'Word']
+
 
 main_theme <- bs_theme(
   version = 5,
@@ -95,31 +97,14 @@ ui <- page_fluid(
   navset_underline(
     nav_panel(
       "Wordle Answers",
-      modWordListUI("wordle",ans,sys_date,years,dups_present,days_since_last_update,TRUE,TRUE)
+      modWordListUI("wordle",ans,sys_date,years,dups_present,days_since_last_update)
     ), # close nav_panel
-    nav_panel(
-      "5-Letter Scrabble Words",
-      br(),
-      column(
-        8,
-        tags$span("This Scrabble word list is provided from the {scrabble} package by Julie Laffy
-                  available on "),
-        tags$a(href="https://github.com/jlaffy/scrabble", "github", style = "color:#3BC143", .noWS="after"),
-        tags$span(". For those familiar with both games, clearly the criteria for a Wordle answer is
-                  not the same as a Scrabble word."),
-        tags$span("Use your best judgement if you are looking for inspiration."),
-        tags$span("(I make no judgements about how or if you use this list when playing Wordle.
-                  Let's all enjoy games the way we prefer to play them.)"),
-      ),
-      br(),
-      modWordListUI("scrabble",five_letter_words,years,dups_present,days_since_last_update,FALSE,FALSE)
-    ),
     nav_panel(
       "More about using RegEx",
       column(
         width = 8,
         tags$p(),
-        tags$p("The letter filters use Regular Expression ('RegEx') to pair down the word list. A RegEx is a character sequence that defines a search pattern. Although powerful, they can take a little getting used to, so below are some examples of its functionality and special characters to consider when constructing one:"),
+        tags$p("The letter filter uses a Regular Expression ('RegEx') to pair down the word list. A RegEx is a character sequence that defines a search pattern. Although powerful, they can take a little getting used to, so below are some examples of its functionality and special characters to consider when constructing one:"),
         tags$ul(
           tags$li("While Regex's are typically case sensitive, everything will be converted to capitals before parsing."),
           tags$li("Any sequence of letters will be considered regardless of its position in a word. For example, 'EF' will match with both GRIEF and CLEFT."),
@@ -153,7 +138,6 @@ ui <- page_fluid(
       "About",
       column(8,
         br(),
-        p("Hi! Thanks for visiting!"),
         p(
           tags$span("Occasionally, in the puzzle game "),
           tags$a(href="https://www.nytimes.com/games/wordle","Wordle", style = "color:#3BC143", .noWS="after"),
@@ -161,10 +145,23 @@ ui <- page_fluid(
                     answer has ever been repeated."),
           tags$span(" Ya know, fun stuff you think about while riding a rollercoaster.")
         ),
-        p(),
-        p("I'm not a fan of visiting ad-bloated websites to wade through multi-paragraph lead-ins
-          (like this one?) only to have to scan an ever growing list of words. So, I decided to make
-          a lightweight and data-focused website that can help me in this endeavour -- and now also you!"),
+        p(
+          tags$span("I'm not a fan of visiting ad-bloated websites to mouse through an ever growing list of words "),
+          tags$span(" (but when I do, I visit "),
+          tags$a(href="https://wordfinder.yourdictionary.com/wordle/answers/", "this website", style = "color:#3BC143", .noWS="after"),
+          tags$span(", which I use to verify my Wordle answers)."),
+          tags$span("So, I decided to make a lightweight and data-focused website that can help me in this endeavour -- and now also you!")
+        ),
+        p(
+          tags$span("This Scrabble word list is provided from the {scrabble} package by Julie Laffy
+                    available on "),
+          tags$a(href="https://github.com/jlaffy/scrabble", "github", style = "color:#3BC143", .noWS="after"),
+          tags$span(". For those familiar with both games, clearly the criteria for a Wordle answer is
+                    not the same as a Scrabble word."),
+          tags$span("Use your best judgement if you are looking for inspiration."),
+          tags$span("(I make no judgements about how or if you use this list when playing Wordle.
+                    Let's all enjoy games the way we prefer to play them.)"),
+        ),
         p(
           tags$span("For the R enthusiasts, this website was built using the {shiny} package in R Studio,
                     along with Bootstrap 5 using {bslib}."),
@@ -174,9 +171,8 @@ ui <- page_fluid(
           tags$a(href="https://github.com/hillad3/HistoricalWordleAnswers", "here", style = "color:#3BC143", .noWS="after"),
           tags$span(".")
         ),
-        p("I plan to update this list every couple of weeks, assuming the hubbub of life doesn't
-          get the best of me. If I can figure out a way to create a feedback form, I'll add one and
-          then you can nag me to update."),
+        p("Final Note: I plan to update this list every couple of weeks, assuming the hubbub of life doesn't
+          get the best of me. Please be patient (or nag me on Github to update)."),
         tags$span("Happy Wordle-ing!", style="font-weight:bold; font-size:110%"),
         tags$span(" (let's pretend that's a thing normal people say)", style="font-size:80%"),
         p("", style="margin-bottom:25px")
@@ -188,8 +184,7 @@ ui <- page_fluid(
 # Define server logic required to draw a histogram
 server <- function(input, output, session) {
 
-  modWordListServer("wordle",ans,sys_date,TRUE,TRUE)
-  modWordListServer("scrabble",five_letter_words,sys_date,FALSE,FALSE)
+  modWordListServer("wordle",ans,sys_date)
 
 }
 
