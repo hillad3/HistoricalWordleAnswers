@@ -13,32 +13,32 @@ library(stringr)
 
 source("moduleWordList.R")
 
-tryCatch(
-  expr = {
-    con <- DBI::dbConnect(
-      drv = RPostgres::Postgres(),
-      dbname = Sys.getenv("dbname"),
-      host = Sys.getenv("host"),
-      port = Sys.getenv("port"),
-      user = Sys.getenv("userid"),
-      password = Sys.getenv("pwd")
-    )
+# tryCatch(
+#   expr = {
+#     con <- DBI::dbConnect(
+#       drv = RPostgres::Postgres(),
+#       dbname = Sys.getenv("dbname"),
+#       host = Sys.getenv("host"),
+#       port = Sys.getenv("port"),
+#       user = Sys.getenv("userid"),
+#       password = Sys.getenv("pwd")
+#     )
+#
+#     ans <- DBI::dbReadTable(con, "wordle") |> as.data.table()
+#
+#     DBI::dbDisconnect(con)
+#     rm(con)
+#   },
+#   error = function(e){
+#     ans <- fread("data/wordle_answers.csv")
+#   },
+#   warning = function(w){
+#     ans <- fread("data/wordle_answers.csv")
+#   }
+# )
 
-    ans <- DBI::dbReadTable(con, "wordle") |> as.data.table()
 
-    DBI::dbDisconnect(con)
-    rm(con)
-  },
-  error = function(e){
-    ans <- fread("data/wordle_answers.csv")
-  },
-  warning = function(w){
-    ans <- fread("data/wordle_answers.csv")
-  }
-)
-
-
-
+ans <- fread("data/wordle_answers.csv")
 sys_date <- as.Date(lubridate::with_tz(Sys.time(), "US/Eastern"), tz = "US/Eastern")
 
 setorder(ans, -Index) # add this step since the procedure to update the db with wordle answers does not use ORDER BY
