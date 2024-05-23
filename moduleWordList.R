@@ -27,7 +27,7 @@ modWordListUI <- function(id,
     ),
     br(),
     tags$h1(
-      tags$span("Word List Filters", style = "color:#3BC143"),
+      tags$span("Advanced Word Filters", style = "color:#3BC143"),
       tags$span(
         actionButton(
           inputId = NS(id,"reset_filter"),
@@ -41,7 +41,7 @@ modWordListUI <- function(id,
       open = FALSE,
       multiple = FALSE,
       accordion_panel(
-        "Advanced Filters",
+        "Expand Filters",
         textInput(
          inputId = NS(id,"regex_str"),
          label = "By Letter (see RegEx tab for instructions):",
@@ -148,7 +148,7 @@ modWordListServer <- function(id, dt_words_, max_date_){
             options = list(
               autoWidth=TRUE,
               pageLength=10,
-              language = list(search = 'Full Text Search:')
+              language = list(search = 'Normal Word Search:')
             )) |>
             formatStyle(columns = names(dt())[1], color = "#EDC001") |>
             formatStyle(columns = names(dt())[2], color = "#3BC143")

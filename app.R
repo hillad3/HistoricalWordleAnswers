@@ -13,32 +13,22 @@ library(stringr)
 
 source("moduleWordList.R")
 
-# tryCatch(
-#   expr = {
-#     con <- DBI::dbConnect(
-#       drv = RPostgres::Postgres(),
-#       dbname = Sys.getenv("dbname"),
-#       host = Sys.getenv("host"),
-#       port = Sys.getenv("port"),
-#       user = Sys.getenv("userid"),
-#       password = Sys.getenv("pwd")
-#     )
-#
-#     ans <- DBI::dbReadTable(con, "wordle") |> as.data.table()
-#
-#     DBI::dbDisconnect(con)
-#     rm(con)
-#   },
-#   error = function(e){
-#     ans <- fread("data/wordle_answers.csv")
-#   },
-#   warning = function(w){
-#     ans <- fread("data/wordle_answers.csv")
-#   }
-# )
+
+con <- DBI::dbConnect(
+  drv = RPostgres::Postgres(),
+  dbname = Sys.getenv("dbname"),
+  host = Sys.getenv("host"),
+  port = Sys.getenv("port"),
+  user = Sys.getenv("userid"),
+  password = Sys.getenv("pwd")
+)
+
+ans <- DBI::dbReadTable(con, "wordle") |> as.data.table()
+
+DBI::dbDisconnect(con)
+rm(con)
 
 
-ans <- fread("data/wordle_answers.csv")
 sys_date <- as.Date(lubridate::with_tz(Sys.time(), "US/Eastern"), tz = "US/Eastern")
 
 setorder(ans, -Index) # add this step since the procedure to update the db with wordle answers does not use ORDER BY
@@ -46,15 +36,9 @@ ans[,Date:=lubridate::mdy(Date)]
 ans <- ans[!(Date %in% sys_date)] # if applicable, exclude today's word to prevent spoilers
 
 
-days_since_last_update <- as.integer(as.POSIXct(sys_date) - as.POSIXct(max(ans$Date), tz = "EST"))
+days_since_last_update <- as.integer(as.POSIXct(sys_date) - as.POSIXct(max(ans[!is.na(Date)]$Date), tz = "EST"))
 years <- unique(ans[,.(lubridate::year(Date))]) |> unlist() |> sort(decreasing=TRUE) |> as.character()
 dups_present <- dim(ans[duplicated(Word)])[1]>0
-
-
-five_letter_words <- fread("data/five_letter_scrabble_words.csv")
-five_letter_words[,Word:=toupper(Word)]
-
-ans <- ans[five_letter_words[,Index:=NULL], on = 'Word']
 
 
 main_theme <- bs_theme(
@@ -104,7 +88,7 @@ ui <- page_fluid(
       column(
         width = 8,
         tags$p(),
-        tags$p("The letter filter uses a Regular Expression ('RegEx') to pair down the word list. A RegEx is a character sequence that defines a search pattern. Although powerful, they can take a little getting used to, so below are some examples of its functionality and special characters to consider when constructing one:"),
+        tags$p("The Advanced Word Filter uses a Regular Expression ('RegEx') to pair down the word list. A RegEx is a character sequence that defines a search pattern. Although powerful, they can take a little getting used to, so below are some examples of its functionality and special characters to consider when constructing one:"),
         tags$ul(
           tags$li("While Regex's are typically case sensitive, everything will be converted to capitals before parsing."),
           tags$li("Any sequence of letters will be considered regardless of its position in a word. For example, 'EF' will match with both GRIEF and CLEFT."),
