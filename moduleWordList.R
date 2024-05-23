@@ -15,6 +15,11 @@ modWordListUI <- function(id,
       ifelse(days_since_last_update_<=1," day ago)."," days ago)."),
       " If applicable, today's word will automatically not be displayed to prevent spoilers.")
     ),
+    shinyWidgets::materialSwitch(
+      inputId = NS(id,"include_scrabble_dict"),
+      label = "Include Scrabble words",
+      value = FALSE,
+    ),
     accordion(
       open = TRUE,
       accordion_panel(
@@ -59,11 +64,6 @@ modWordListUI <- function(id,
           choices = c("", years_),
           selected = "",
           multiple = FALSE
-        ),
-        shinyWidgets::materialSwitch(
-          inputId = NS(id,"include_scrabble_dict"),
-          label = "Include Scrabble words",
-          value = FALSE,
         ),
         shinyWidgets::materialSwitch(
           inputId = NS(id,"check_dups"),
