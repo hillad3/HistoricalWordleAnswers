@@ -20,17 +20,7 @@ con <- dbConnect(
   user = Sys.getenv("userid"),
   password = Sys.getenv("pwd")
 )
-db_ans <- dbReadTable(con, "wordle") |> as.data.table()
 
-overwrite_table <- TRUE
+dbWriteTable(con, "wordle", local_ans,  overwrite=TRUE)
+dbDisconnect(con)
 
-if(dim(new_ans)[1]==0){
-  # do nothing and close connection
-  dbDisconnect(con)
-} else if (overwrite_table) {
-  # overwrite table
-
-  dbWriteTable(con, "wordle", local_ans,  overwrite=TRUE)
-  dbDisconnect(con)
-
-}
