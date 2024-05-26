@@ -13,7 +13,7 @@ modWordListUI <- function(id,
       max(dt_words_[!is.na(Date)]$Date)," (",
       days_since_last_update_,
       ifelse(days_since_last_update_<=1," day ago)."," days ago)."),
-      " If applicable, today's word will automatically not be displayed to prevent spoilers.")
+      " If applicable, today's word will not be displayed to prevent spoilers.")
     ),
     shinyWidgets::materialSwitch(
       inputId = NS(id,"include_scrabble_dict"),
