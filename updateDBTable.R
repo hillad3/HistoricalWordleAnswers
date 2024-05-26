@@ -21,6 +21,8 @@ con <- dbConnect(
   password = Sys.getenv("pwd")
 )
 
+tmp <- dbReadTable(con, "wordle")
+
 dbWriteTable(con, "wordle", local_ans,  overwrite=TRUE)
 dbDisconnect(con)
 
