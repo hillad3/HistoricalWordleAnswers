@@ -5,13 +5,6 @@ library(data.table)
 library(dplyr)
 library(DBI)
 
-local_ans <- fread("data/wordle_answers.csv")
-
-five_letter_words <- fread("data/five_letter_scrabble_words.csv")
-five_letter_words[,Word:=toupper(Word)]
-
-local_ans <- local_ans[five_letter_words[,Index:=NULL], on = 'Word']
-
 con <- dbConnect(
   drv = RPostgres::Postgres(),
   dbname = Sys.getenv("dbname"),
@@ -21,8 +14,40 @@ con <- dbConnect(
   password = Sys.getenv("pwd")
 )
 
-tmp <- dbReadTable(con, "wordle")
+overwrite_flsw <- FALSE
+if(overwrite_flsw){
+  flsw <- fread("data/five_letter_scrabble_words.csv")
+  flsw[,Word:=toupper(Word)]
+  flsw[,Index:=NULL]
+  dbWriteTable(con, "flsw", flsw, overwrite=TRUE)
+}
 
-dbWriteTable(con, "wordle", local_ans,  overwrite=TRUE)
+wa <- fread("data/wordle_answers.csv")
+overwrite_wa <- FALSE
+
+if(overwrite_wa){
+  dbWriteTable(con, "wa", wa, overwrite=TRUE)
+} else {
+
+  db_wa <- dbReadTable(con, "wa")
+  new_wa <- anti_join(wa, db_wa, by = c("Word"))
+
+  if(dim(new_wa)[1]>0){
+    dbWriteTable(con, "wa", new_wa, append = TRUE)
+  }
+
+}
+
+# recreate wordle table
+flsw <- tbl(con, "flsw")
+wa <- tbl(con, "wa")
+
+wordle <- flsw |>
+  full_join(wa, by = c("Word")) |>
+  arrange(Word) |>
+  select(Index, Date, Word)
+
+dbWriteTable(con, "wordle", wordle |> collect(), overwrite=TRUE)
+
 dbDisconnect(con)
 
