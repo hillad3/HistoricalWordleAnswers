@@ -87,7 +87,7 @@ ui <- page_fluid(
       column(
         width = 8,
         tags$p(),
-        tags$p("The Advanced Word Filter uses a Regular Expression ('RegEx') to pair down the word list. A RegEx is a character sequence that defines a search pattern. Although powerful, they can take a little getting used to, so below are some examples of its functionality and special characters to consider when constructing one:"),
+        tags$p("The Advanced Filters accordion uses a Regular Expression ('RegEx') to pair down the word list. A RegEx is a character sequence that defines a search pattern. Although powerful, they can take a little getting used to, so below are some examples of its functionality and special characters to consider when constructing one:"),
         tags$ul(
           tags$li("While Regex's are typically case sensitive, everything will be converted to capitals before parsing."),
           tags$li("Any sequence of letters will be considered regardless of its position in a word. For example, 'EF' will match with both GRIEF and CLEFT."),
@@ -125,8 +125,7 @@ ui <- page_fluid(
           tags$span("Occasionally, in the puzzle game "),
           tags$a(href="https://www.nytimes.com/games/wordle","Wordle", style = "color:#3BC143", .noWS="after"),
           tags$span(", I find myself wanting to know if a word was previously used or if a Wordle
-                    answer has ever been repeated."),
-          tags$span(" Ya know, fun stuff you think about while riding a rollercoaster.")
+                    answer has ever been repeated.")
         ),
         p(
           tags$span("I'm not a fan of visiting ad-bloated websites to mouse through an ever growing list of words "),
@@ -157,7 +156,6 @@ ui <- page_fluid(
         p("Final Note: I plan to update this list every couple of weeks, assuming the hubbub of life doesn't
           get the best of me. Please be patient (or nag me on Github to update)."),
         tags$span("Happy Wordle-ing!", style="font-weight:bold; font-size:110%"),
-        tags$span(" (let's pretend that's a thing normal people say)", style="font-size:80%"),
         p("", style="margin-bottom:25px")
       )
     ) # close nav_panel About
