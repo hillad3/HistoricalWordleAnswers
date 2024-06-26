@@ -32,7 +32,7 @@ modWordListUI <- function(id,
     ),
     br(),
     tags$h1(
-      tags$span("Advanced Word Filters", style = "color:#3BC143"),
+      tags$span("Advanced Filters", style = "color:#3BC143"),
       tags$span(
         actionButton(
           inputId = NS(id,"reset_filter"),
@@ -76,11 +76,12 @@ modWordListUI <- function(id,
     ),
     br(),
     br(),
-    tags$h1("Word Analysis", style = "color:#3BC143"),
+    tags$h1("Letter Analysis", style = "color:#3BC143"),
     accordion(
-      open = TRUE,
+      open = FALSE,
       accordion_panel(
-        "Character Frequency",
+        title = "Character Frequency",
+        p("(Note: Results change only when using the Advanced Filters.)"),
         card(
           plotlyOutput(NS(id,"letter_freq"))
         )
