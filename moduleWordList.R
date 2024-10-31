@@ -17,7 +17,7 @@ modWordListUI <- function(id,
     ),
     shinyWidgets::materialSwitch(
       inputId = NS(id,"include_scrabble_dict"),
-      label = "Include Scrabble words",
+      label = "Include singular Scrabble words",
       value = FALSE,
     ),
     accordion(
@@ -46,12 +46,14 @@ modWordListUI <- function(id,
       open = FALSE,
       multiple = FALSE,
       accordion_panel(
-        "Expand Filters",
-        textInput(
+        "Advanced Filters",
+        textAreaInput(
          inputId = NS(id,"regex_str"),
          label = "By Letter (see RegEx tab for instructions):",
          value=""
         ),
+        p("Full alphabet list to help construct regexes: [ABCDEFGHIJKLMNOPQRSTUVWXYZ]"),
+        div(),
         dateRangeInput(
           inputId = NS(id,"date_range"),
           label = "By Date Range",
