@@ -49,11 +49,15 @@ modWordListUI <- function(id,
         "Advanced Filters",
         textAreaInput(
          inputId = NS(id,"regex_str"),
-         label = "By Letter (see RegEx tab for instructions):",
+         label = "By RegEx (see tab for instructions):",
          value=""
         ),
-        p("Full alphabet list to help construct regexes: [ABCDEFGHIJKLMNOPQRSTUVWXYZ]"),
-        div(),
+        tags$p(
+          tags$span("Alphabet to help build regex: ", style = "font-size:9pt;"),
+          tags$span("[ABCDEFGHIJKLMNOPQRSTUVWXYZ]", style = "color:#3BC143; font-size:9pt;"),
+          style = "margin-bottom:35px"
+        ),
+        # div(style = "margin-bottom:35px"),
         dateRangeInput(
           inputId = NS(id,"date_range"),
           label = "By Date Range",
