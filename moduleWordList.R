@@ -9,15 +9,15 @@ modWordListUI <- function(id,
     br(),
     tags$h1("Word List", style = "color:#3BC143"),
     tags$p(paste0(
-      "Wordle Answer list updated ",
+      "Wordle Answer list refreshed as of ",
       max(dt_words_[!is.na(Date)]$Date)," (",
       days_since_last_update_,
       ifelse(days_since_last_update_<=1," day ago)."," days ago)."),
-      " If applicable, today's word will not be displayed to prevent spoilers.")
+      " Today's word will not be displayed to prevent spoilers.")
     ),
     shinyWidgets::materialSwitch(
       inputId = NS(id,"include_scrabble_dict"),
-      label = "Include singular Scrabble words",
+      label = "Compare with Scrabble words:",
       value = FALSE,
     ),
     accordion(
