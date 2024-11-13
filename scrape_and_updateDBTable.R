@@ -54,7 +54,7 @@ max_index <- max(db_wordle_answers$Index)
 max_date <- db_wordle_answers[Index==max_index,.(Date)] |> unlist() |> mdy()
 
 
-if( (ymd(today()) > max_date) | overwrite_wordle_dict ){
+if( (ymd(today())-1 > max_date) | overwrite_wordle_dict ){
 
   # scrape the website and determine which words are new
   u <- read_html("https://wordfinder.yourdictionary.com/wordle/answers/")
@@ -100,7 +100,7 @@ if( (ymd(today()) > max_date) | overwrite_wordle_dict ){
   }
 
 } else {
-  print("Wordle table is up-to-date.")
+  print("The Wordle list is already up to date")
 }
 
 dbDisconnect(con)
