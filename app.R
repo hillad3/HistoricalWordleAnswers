@@ -10,12 +10,9 @@ library(tidytext)
 library(dplyr)
 library(plotly)
 library(stringr)
-library(rvest)
-library(lubridate)
 library(DBI)
 
 source("moduleWordList.R")
-source("scrape_and_updateDBTable2.R")
 
 con <- DBI::dbConnect(
   drv = RPostgres::Postgres(),
@@ -32,16 +29,6 @@ sys_date <- as.Date(lubridate::with_tz(Sys.time(), "US/Eastern"), tz = "US/Easte
 ans <- DBI::dbReadTable(con, "wordle") |> as.data.table()
 ans[,Date:=lubridate::mdy(Date)]
 ans <- ans[!(Date %in% sys_date)] # if applicable, exclude today's word to prevent spoilers
-
-# only update database is current date - db date is greater than 1;
-# a delta of 1 means that the table is up-to-date since there is always a one day lag
-if(as.integer(as.POSIXct(sys_date) - as.POSIXct(max(ans[!is.na(Date)]$Date), tz = "EST")) > 1 ){
-  scrape_and_update_db(con)
-  # overwrite the values if an update occurred
-  ans <- DBI::dbReadTable(con, "wordle") |> as.data.table()
-  ans[,Date:=lubridate::mdy(Date)]
-  ans <- ans[!(Date %in% sys_date)] # if applicable, exclude today's word to prevent spoilers
-}
 
 DBI::dbDisconnect(con)
 rm(con)
@@ -158,8 +145,8 @@ ui <- page_fluid(
         p(
           tags$span("This website was built using the {shiny} package in R Studio,
                     along with Bootstrap 5 using {bslib}."),
-          tags$span("Data is scraped using {rvest}. (It is possible that their website changes and breaks this scraping function, so "),
-          tags$span("feel free to text me or bug me on my Github if this list is out of date or drastically off)."),
+          tags$span("Data is scraped using {rvest}. (This scraping is triggered manually, so "),
+          tags$span("feel free to text me or bug me on my Github if this list is out of date or something looks broken)."),
           tags$span("The Wordle answer list is served by a free-tier AWS PostgreSQL database, using the {DBI} package."),
           tags$span("Tables were created with the {data.table} package and rendered with the {DT} package."),
           tags$span("The interactive graph was created in {plotly} using tokenization with {tidytext}."),
