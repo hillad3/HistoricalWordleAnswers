@@ -16,22 +16,22 @@ con <- DBI::dbConnect(
 # function used to update wordle table in database
 update_db <- function(){
   # recreate wordle table
-  flsw <- tbl(con, "flsw")
-  wa <- tbl(con, "wa")
+  five_letter_scrabble_words <- tbl(con, "five_letter_scrabble_words")
+  wordle_answers <- tbl(con, "wordle_answers")
 
   # finally merge wordle answers with scrabble answers to get one full table
-  wordle <- flsw |>
-    full_join(wa, by = c("Word")) |>
+  website_word_list <- five_letter_scrabble_words |>
+    full_join(wordle_answers, by = c("Word")) |>
     arrange(Word) |>
     select(Index, Date, Word)
 
-  dbWriteTable(con, "wordle", wordle |> collect(), overwrite=TRUE)
+  dbWriteTable(con, "website_word_list", website_word_list |> collect(), overwrite=TRUE)
 
   print("Wordle table in db updated")
 }
 
 # make a connection to the existing wordle answer table and get max index and corresponding date
-db_wordle_answers <- dbReadTable(con, "wa") |> as.data.table()
+db_wordle_answers <- dbReadTable(con, "wordle_answers") |> as.data.table()
 setorder(db_wordle_answers, -Index)
 max_index <- max(db_wordle_answers$Index)
 max_date <- db_wordle_answers[Index==max_index,.(Date)] |> unlist() |> mdy()
@@ -70,7 +70,7 @@ if( (ymd(today())-1 > max_date)){
 
   if(dim(new_wordle_answers)[1]>0){
     print("Adding new wordle answers to table in the database...")
-    dbWriteTable(con, "wa", new_wordle_answers, append = TRUE)
+    dbWriteTable(con, "wordle_answers", new_wordle_answers, append = TRUE)
     update_db()
 
   } else {
