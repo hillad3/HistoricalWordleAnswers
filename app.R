@@ -27,6 +27,7 @@ sys_date <- as.Date(lubridate::with_tz(Sys.time(), "US/Eastern"), tz = "US/Easte
 
 # preliminary values; may be refreshed if db is not up to date
 ans <- DBI::dbReadTable(con, "website_word_list") |> as.data.table()
+setnames(ans, old = c("date","index","word"), new = c("Date","Index","Word"))
 ans[,Date:=lubridate::mdy(Date)]
 ans <- ans[!(Date %in% sys_date)] # if applicable, exclude today's word to prevent spoilers
 
