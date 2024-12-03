@@ -26,9 +26,9 @@ con <- DBI::dbConnect(
 sys_date <- as.Date(lubridate::with_tz(Sys.time(), "US/Eastern"), tz = "US/Eastern")
 
 # preliminary values; may be refreshed if db is not up to date
-ans <- DBI::dbReadTable(con, "website_word_list") |> as.data.table()
+ans <- DBI::dbGetQuery(con, "SELECT * FROM website_word_list ORDER BY word") |> as.data.table()
 setnames(ans, old = c("date","index","word"), new = c("Date","Index","Word"))
-ans <- ans[!(Date %in% sys_date)] # if applicable, exclude today's word to prevent spoilers
+ans <- ans[is.na(Date) | !(Date >= sys_date)] # if applicable, exclude today's word to prevent spoilers
 
 DBI::dbDisconnect(con)
 rm(con)
