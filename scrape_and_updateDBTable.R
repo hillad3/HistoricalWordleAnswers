@@ -1,12 +1,10 @@
-rm(list=ls())
-gc()
-library(data.table)
-library(dplyr)
-library(DBI)
-library(rvest)
-library(lubridate)
-library(glue)
-library(purrr)
+require(data.table)
+require(dplyr)
+require(DBI)
+require(rvest)
+require(lubridate)
+require(glue)
+require(purrr)
 
 clean_url_words <- function(df){
   df <- df[,date:=stringr::str_remove(date,"Today")]
