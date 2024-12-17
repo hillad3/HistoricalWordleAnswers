@@ -6,7 +6,7 @@ library(DBI)
 library(rvest)
 library(lubridate)
 library(glue)
-source("scrape_and_updateDBTable_helper.R")
+library(purrr)
 
 clean_url_words <- function(df){
   df <- df[,date:=stringr::str_remove(date,"Today")]
@@ -65,7 +65,7 @@ sys_date <- as.Date(lubridate::with_tz(Sys.time(), "US/Eastern"), tz = "US/Easte
 
 # subtract 1 day since generally I don't want to include the current day's word and
 # it is challenge to ensure that word isn't included with timezone differences
-if( (sys_date-1 > max_web_date)){
+if( (sys_date-1 > max_web_date) ){
 
   # scrape the website and reshape into a data.table
   url_wordle_answers <- read_html("https://wordfinder.yourdictionary.com/wordle/answers/") |>
@@ -88,6 +88,7 @@ if( (sys_date-1 > max_web_date)){
 
       max_url_index <- url_wordle_answers[index == max(index)][ ,index]
 
+      # Check that the word lengths are all 5
       if (all(lapply(url_wordle_answers$word, function(x) stringr::str_length(x) == 5) |> unlist())){
 
         # add the index to the first date ever. this assumes that there are no skipped days
