@@ -106,18 +106,15 @@ compare_wordle_tables <- function(){
       dbWriteTable(con, "wordle_answers", new_wordle_answers, append = TRUE)
       update_db(new_wordle_answers)
       DBI::dbDisconnect(con)
-      rm(con)
 
     } else {
       print("There are no new wordle answers to add to the table in the database.")
       DBI::dbDisconnect(con)
-      rm(con)
     }
 
   } else {
     print("The Wordle list is already up to date")
     DBI::dbDisconnect(con)
-    rm(con)
   }
 }
 
