@@ -127,5 +127,5 @@ con <- DBI::dbConnect(
   password = Sys.getenv("pwd")
 )
 
-# this function has side effects that update the db
+# this function has side effects that updates the db
 compare_wordle_tables()
