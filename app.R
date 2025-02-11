@@ -14,6 +14,8 @@ library(DBI)
 
 source("moduleWordList.R")
 
+# These connection parameters are different than the Environment PATH variables because
+# Shinyapps.io requires IPv4 protocol (and is not compatible with IPv6 protocol currently)
 con <- DBI::dbConnect(
   drv = RPostgres::Postgres(),
   dbname = Sys.getenv("dbname"),
@@ -129,7 +131,7 @@ ui <- page_fluid(
           tags$span("I'm not a fan of visiting ad-bloated websites to mouse through an ever growing list of words "),
           tags$span(" (but when I do, I visit "),
           tags$a(href="https://wordfinder.yourdictionary.com/wordle/answers/", "this website", style = "color:#3BC143", .noWS="after"),
-          tags$span(", which I am also using to scrape the Wordle answers on this website)."),
+          tags$span(", which I am also using to scrape Wordle answers using a scheduled task on my computer)."),
           tags$span("So, I decided to make a lightweight and data-focused website that can help me in this endeavour -- and now also you!")
         ),
         p(
@@ -147,7 +149,7 @@ ui <- page_fluid(
                     along with Bootstrap 5 using {bslib}."),
           tags$span("Data is scraped using {rvest}. (This scraping is triggered manually, so "),
           tags$span("feel free to text me or bug me on my Github if this list is out of date or something looks broken)."),
-          tags$span("The Wordle answer list is served by a free-tier AWS PostgreSQL database, using the {DBI} package."),
+          tags$span("The Wordle answer list is served by a free-tier Supabase.io PostgreSQL database, using the {DBI} package."),
           tags$span("Tables were created with the {data.table} package and rendered with the {DT} package."),
           tags$span("The interactive graph was created in {plotly} using tokenization with {tidytext}."),
           tags$span("Its code is available on my github, "),
