@@ -8,6 +8,17 @@ library(lubridate)
 library(glue)
 library(purrr)
 
+# sleep delay time, in seconds
+delay = 3
+
+close_timer <- function(delay){
+  while (delay > 0){
+    print(paste0("Closing R in... ", delay))
+    Sys.sleep(1)
+    delay = delay - 1
+  }
+}
+
 clean_url_words <- function(df){
   df <- df[,date:=stringr::str_remove(date,"Today")]
   df <- df[,date:=stringr::str_remove_all(date,"\\s")]
@@ -30,9 +41,11 @@ update_db <- function(df){
   dbWriteTable(con, "website_word_list", df, append=TRUE)
 
   print("Website word list table in db updated")
+
 }
 
 compare_wordle_tables <- function(){
+
   max_web_entry <- tbl(con, "wordle_answers") |>
     mutate(max_index = max(index)) |>
     filter(max_index == index) |>
@@ -105,26 +118,29 @@ compare_wordle_tables <- function(){
       print("Adding new wordle answers to table in the database...")
       dbWriteTable(con, "wordle_answers", new_wordle_answers, append = TRUE)
       update_db(new_wordle_answers)
+      close_timer(delay)
       DBI::dbDisconnect(con)
 
     } else {
       print("There are no new wordle answers to add to the table in the database.")
+      close_timer(delay)
       DBI::dbDisconnect(con)
     }
 
   } else {
     print("The Wordle list is already up to date")
+    close_timer(delay)
     DBI::dbDisconnect(con)
   }
 }
 
 con <- DBI::dbConnect(
   drv = RPostgres::Postgres(),
-  dbname = Sys.getenv("dbname"),
-  host = Sys.getenv("host"),
-  port = Sys.getenv("port"),
-  user = Sys.getenv("userid"),
-  password = Sys.getenv("pwd")
+  dbname = Sys.getenv("supabaseDbName"),
+  host = Sys.getenv("supabaseHost"),
+  port = Sys.getenv("supabasePort"),
+  user = Sys.getenv("supabaseUser"),
+  password = Sys.getenv("supabasePW"),
 )
 
 # this function has side effects that updates the db
