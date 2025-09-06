@@ -7,7 +7,6 @@ modWordListUI <- function(id,
                           days_since_last_update_){
   tagList(
     br(),
-    tags$h1("Word List", style = "color:#3BC143"),
     tags$p(paste0(
       "Wordle Answer list refreshed as of ",
       max(dt_words_[!is.na(Date)]$Date)," (",
@@ -15,42 +14,47 @@ modWordListUI <- function(id,
       ifelse(days_since_last_update_<=1," day ago)."," days ago)."),
       " Today's word will not be displayed to prevent spoilers.")
     ),
-    shinyWidgets::materialSwitch(
-      inputId = NS(id,"include_scrabble_dict"),
-      label = "Compare with Scrabble words:",
-      value = FALSE,
-    ),
-    accordion(
-      open = TRUE,
-      accordion_panel(
-        paste(stringr::str_to_title(id), " Word Table"),
-        column(6,
-          DTOutput(NS(id,"word_list_table"))
-        )
+    tags$div(
+      tags$div(
+        shinyWidgets::materialSwitch(
+          inputId = NS(id,"include_scrabble_dict"),
+          label = "Include Scrabble:",
+          status = "success",
+          width = "150px",
+          value = FALSE
+        ),
+        style = "display: inline-block;"
       ),
-      br()
-    ),
-    br(),
-    tags$h1(
-      tags$span("Advanced Filters", style = "color:#3BC143"),
-      tags$span(
+      tags$div(
+        shinyWidgets::materialSwitch(
+          inputId = NS(id,"exclude_past_answers"),
+          label = "Exclude Wordle:",
+          status = "warning",
+          width = "150px",
+          value = FALSE
+        ),
+        style = "display: inline-block;"
+      ),
+      tags$div(
         actionButton(
           inputId = NS(id,"reset_filter"),
           label = "Reset Filters",
           style = "background:#EDC001; color:#222222; font-weight:bold"
         ),
-        style = "text-align:right"
-      )
+        style = "display: inline-block;"
+      ),
+      br()
     ),
+    br(),
     accordion(
       open = FALSE,
       multiple = FALSE,
       accordion_panel(
-        "Advanced Filters",
+        "Expand for advanced filters",
         textAreaInput(
-         inputId = NS(id,"regex_str"),
-         label = "By RegEx (see tab for instructions):",
-         value=""
+          inputId = NS(id,"regex_str"),
+          label = "By RegEx (see tab for instructions):",
+          value=""
         ),
         tags$p(
           tags$span("Alphabet to help build regex: ", style = "font-size:9pt;"),
@@ -79,6 +83,17 @@ modWordListUI <- function(id,
         ),
         if(!dups_present_){tags$p(paste0("No repeats identified as of ",max(dt_words_[!is.na(Date)]$Date)), style = "font-size:90%")},
       )
+    ),
+    br(),
+    accordion(
+      open = TRUE,
+      accordion_panel(
+        "Word Table",
+        column(6,
+          DTOutput(NS(id,"word_list_table"))
+        )
+      ),
+      br()
     ),
     br(),
     br(),
@@ -130,6 +145,10 @@ modWordListServer <- function(id, dt_words_, max_date_){
         } else {
           dt <- dt[!is.na(Date)]
           setorder(dt, -Index)
+        }
+
+        if(input$exclude_past_answers){
+          dt <- dt[is.na(Date)]
         }
 
         if(input$check_dups){
@@ -235,6 +254,12 @@ modWordListServer <- function(id, dt_words_, max_date_){
           updateMaterialSwitch(
             session,
             inputId = "include_scrabble_dict",
+            value = FALSE
+          )
+
+          updateMaterialSwitch(
+            session,
+            inputId = "exclude_past_answers",
             value = FALSE
           )
 
