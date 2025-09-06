@@ -23,7 +23,7 @@ modWordListUI <- function(id,
           width = "150px",
           value = FALSE
         ),
-        style = "display: inline-block;"
+        style = "display: inline-block; font-size:9pt;"
       ),
       tags$div(
         shinyWidgets::materialSwitch(
@@ -33,7 +33,7 @@ modWordListUI <- function(id,
           width = "150px",
           value = FALSE
         ),
-        style = "display: inline-block;"
+        style = "display: inline-block; font-size:9pt;"
       ),
       tags$div(
         actionButton(
@@ -51,15 +51,39 @@ modWordListUI <- function(id,
       multiple = FALSE,
       accordion_panel(
         "Expand for advanced filters",
-        textAreaInput(
-          inputId = NS(id,"regex_str"),
-          label = "By RegEx (see tab for instructions):",
-          value=""
+        tags$div(
+          tags$p("By RegEx", style = "display: inline-block; margin-right: 5px"),
+          tags$div(
+            actionButton(
+              inputId = NS(id,"clear_regex"),
+              label = "Clear",
+              style = "background:#EDC001; color:#222222; font-weight:bold; padding:2px"
+            ),
+            style = "display: inline-block;"
+          ),
+          tags$div(
+            textAreaInput(
+              inputId = NS(id,"regex_str"),
+              label = NULL,
+              value=paste0("[",c(1:5),rep("ABCDEFGHIJKLMNOPQRSTUVWXYZ",5),"]", collapse = ""),
+              height = "150px",
+              width = "300px"
+            ),
+            style = "margin-bottom:5px;"
+          )
         ),
-        tags$p(
-          tags$span("Alphabet to help build regex: ", style = "font-size:9pt;"),
-          tags$span("[ABCDEFGHIJKLMNOPQRSTUVWXYZ]", style = "color:#3BC143; font-size:9pt;"),
-          style = "margin-bottom:35px"
+        tags$div(
+          tags$span(
+            paste0(
+              "Letters within each pair of square brackets are evaluated as possible ",
+              "answers for a single letter position. Each leading number indicates the ",
+              "letter position that the RegEx pertains to, but it is not evaluated or necessary. ",
+              "The default regex shown above is a solution for all five-letter words possible. ",
+              "Therefore, remove letters that you know have been eliminated from each position. "
+            ),
+            style = "font-size:9pt; margin-top:5px;"
+          ),
+          style = "margin-top:5px; margin-bottom:35px; width:250px; line-height:1"
         ),
         # div(style = "margin-bottom:35px"),
         dateRangeInput(
@@ -79,9 +103,10 @@ modWordListUI <- function(id,
           inputId = NS(id,"check_dups"),
           label = "Check for Duplicates",
           value = FALSE,
-          inline = TRUE
+          inline = TRUE,
+          status = "success"
         ),
-        if(!dups_present_){tags$p(paste0("No repeats identified as of ",max(dt_words_[!is.na(Date)]$Date)), style = "font-size:90%")},
+        if(!dups_present_){tags$p(paste0("No repeats identified as of ",max(dt_words_[!is.na(Date)]$Date)), style = "font-size:90%")}
       )
     ),
     br(),
@@ -92,10 +117,8 @@ modWordListUI <- function(id,
         column(6,
           DTOutput(NS(id,"word_list_table"))
         )
-      ),
-      br()
+      )
     ),
-    br(),
     br(),
     tags$h1("Letter Analysis", style = "color:#3BC143"),
     accordion(
@@ -229,13 +252,22 @@ modWordListServer <- function(id, dt_words_, max_date_){
       )
 
       observeEvent(
+        input$clear_regex,
+        updateTextInput(
+          session,
+          inputId = "regex_str",
+          value=""
+        )
+      )
+
+      observeEvent(
         input$reset_filter,
         handlerExpr = {
 
           updateTextInput(
             session,
             inputId = "regex_str",
-            value = ""
+            value=paste0("[",c(1:5),rep("ABCDEFGHIJKLMNOPQRSTUVWXYZ",5),"]", collapse = "")
           )
 
           updateDateRangeInput(
