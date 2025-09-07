@@ -11,6 +11,7 @@ library(dplyr)
 library(plotly)
 library(stringr)
 library(DBI)
+library(lubridate)
 
 source("moduleWordList.R")
 
@@ -25,12 +26,11 @@ con <- DBI::dbConnect(
   password = Sys.getenv("pwd")
 )
 
-sys_date <- as.Date(lubridate::with_tz(Sys.time(), "US/Eastern"), tz = "US/Eastern")
+sys_date <- as.Date(with_tz(Sys.time(), "US/Eastern"), tz = "US/Eastern")
 
 # preliminary values; may be refreshed if db is not up to date
 ans <- DBI::dbGetQuery(con, "SELECT * FROM website_word_list ORDER BY word") |> as.data.table()
 setnames(ans, old = c("date","index","word"), new = c("Date","Index","Word"))
-ans <- ans[is.na(Date) | !(Date >= sys_date)] # if applicable, exclude today's word to prevent spoilers
 
 DBI::dbDisconnect(con)
 rm(con)
@@ -38,6 +38,11 @@ rm(con)
 days_since_last_update <- as.integer(as.POSIXct(sys_date) - as.POSIXct(max(ans[!is.na(Date)]$Date), tz = "EST"))
 years <- unique(ans[,.(lubridate::year(Date))]) |> unlist() |> sort(decreasing=TRUE) |> as.character()
 dups_present <- dim(ans[duplicated(Word)])[1]>0
+
+
+# if applicable, remove the Index of today's Wordle Answer. This is a breadcrumb to help remove the date
+# value later, but I had problems when setting it to NA here, so doing it just before displaying
+ans <- ans[, Index := ifelse(Date >= sys_date, as.integer(NA), Index)]
 
 
 main_theme <- bs_theme(

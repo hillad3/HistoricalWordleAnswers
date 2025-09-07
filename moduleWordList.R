@@ -166,7 +166,7 @@ modWordListServer <- function(id, dt_words_, max_date_){
         if(input$include_scrabble_dict){
           dt
         } else {
-          dt <- dt[!is.na(Date)]
+          dt <- dt[!is.na(Index)] # this needs to use Index since the Date for today's word is removed last in this reactive
           setorder(dt, -Index)
         }
 
@@ -178,6 +178,10 @@ modWordListServer <- function(id, dt_words_, max_date_){
           dt <- dt[duplicated(Word)]
         }
 
+        # this has to come last to remove today's Wordle answer Date since
+        # it converts dates to character strings that would otherwise break other logic for filtering
+        dt[,Date:=ifelse(!is.na(Date) & is.na(Index),NA_character_,as.character(Date))]
+
         dt
 
       })
@@ -188,16 +192,16 @@ modWordListServer <- function(id, dt_words_, max_date_){
           data.table(" " = "There are no historical answers with the filtered parameters!")
         } else {
 
-          if("Date" %in% names(dt())){
-            setnames(dt(), old = c("Date","Index"), new=c("Answer Date (YYYY-MM-DD)","Wordle Index"))
-          }
-
           DT::datatable(
-            dt(),
+            dt()[,.(Word, Date, Index)],
+            rownames = FALSE,
+            class = 'compact',
+            callback = JS("$(document).ready(function() {
+                  $('table.dataTable').css('line-height', '0.7'); // Adjust line height
+                });"),
             options = list(
-              autoWidth=TRUE,
               pageLength=10,
-              language = list(search = 'Normal Word Search:')
+              language = list(search = 'Basic Search:')
             )) |>
             formatStyle(columns = names(dt())[1], color = "#EDC001") |>
             formatStyle(columns = names(dt())[2], color = "#3BC143")
