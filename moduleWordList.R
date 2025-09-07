@@ -200,8 +200,10 @@ modWordListServer <- function(id, dt_words_, max_date_){
                   $('table.dataTable').css('line-height', '0.7'); // Adjust line height
                 });"),
             options = list(
+              pagingType = "full",
               pageLength=10,
-              language = list(search = 'Basic Search:')
+              language = list(search = 'Basic Search:'),
+              dom = '<"top"f>t<"bottom"ilp>' # Customize layout
             )) |>
             formatStyle(columns = names(dt())[1], color = "#EDC001") |>
             formatStyle(columns = names(dt())[2], color = "#3BC143")
