@@ -53,17 +53,11 @@ compare_wordle_tables <- function(){
 
   max_web_date <- max_web_entry |>
     mutate(date = as.character(date)) |>
-    select(date) |>
-    collect() |>
-    unlist() |>
-    unname() |>
+    pull(date) |>
     ymd()
 
   max_web_index <- max_web_entry |>
-    select(index) |>
-    collect() |>
-    unlist() |>
-    unname()
+    pull(index)
 
   # this aligns with the app, so that these should be similar dates and times
   sys_date <- as.Date(lubridate::with_tz(Sys.time(), "US/Eastern"), tz = "US/Eastern")
