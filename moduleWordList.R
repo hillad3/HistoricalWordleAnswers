@@ -36,22 +36,22 @@ modWordListUI <- function(id,
         style = "display: inline-block; font-size:9pt;"
       ),
       tags$div(
+        numericInput(
+          inputId = NS(id, "answer_counts"),
+          label = "Minimum Answer Counts",
+          value = 0,
+          min = 0,
+          step = 1
+        ),
+        style = "display: inline-block; font-size:9pt"
+      ),
+      tags$div(
         actionButton(
           inputId = NS(id,"reset_filter"),
           label = "Reset Filters",
           style = "background:#EDC001; color:#222222; font-weight:bold"
         ),
         style = "display: inline-block;"
-      ),
-      tags$div(
-        numericInput(
-         inputId = NS(id, "answer_counts"),
-         label = "Minimum Answer Counts",
-         value = 0,
-         min = 0,
-         step = 1
-        ),
-        style = "margin-bottom:10px"
       ),
       br()
     ),
