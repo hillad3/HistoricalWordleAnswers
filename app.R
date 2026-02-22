@@ -30,7 +30,7 @@ sys_date <- as.Date(with_tz(Sys.time(), "US/Eastern"), tz = "US/Eastern")
 
 # preliminary values; may be refreshed if db is not up to date
 ans <- DBI::dbGetQuery(con, "SELECT * FROM website_word_list ORDER BY word") |> as.data.table()
-setnames(ans, old = c("date","index","word", "count"), new = c("Date","Index","Word", "Counts"))
+setnames(ans, old = c("date","index","word", "count"), new = c("Date","Index","Word", "Answer Counts"))
 
 DBI::dbDisconnect(con)
 rm(con)
@@ -46,9 +46,18 @@ todays_word <- ans[Date == sys_date, (Word)]
 
 # remove today's word and get counts
 ans <- ans[is.na(Date) | Date != sys_date]
-todays_count <- ans[Word == todays_word, .N]
 
-if(todays_count == 0L){
+if(length(todays_word) == 0L){
+  # today's word often is removed in advance, so this would fail comparison logic to calc todays_count
+  todays_count <- NA_integer_
+} else {
+  todays_count <- ans[Word == todays_word, .N]
+}
+
+if(is.na(todays_count)){
+  # do nothing else to the website_word_list, since the word was removed previously because it is tomorrow's word and
+  # it shouldn't be visible at all to the user
+} else if(todays_count == 0L){
   # if the word is no longer there, then add it back as if it is a scrabble word
   ans <- rbindlist(
     list(

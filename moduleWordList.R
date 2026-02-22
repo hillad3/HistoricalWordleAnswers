@@ -43,6 +43,16 @@ modWordListUI <- function(id,
         ),
         style = "display: inline-block;"
       ),
+      tags$div(
+        numericInput(
+         inputId = NS(id, "answer_counts"),
+         label = "Minimum Answer Counts",
+         value = 0,
+         min = 0,
+         step = 1
+        ),
+        style = "margin-bottom:10px"
+      ),
       br()
     ),
     br(),
@@ -98,13 +108,6 @@ modWordListUI <- function(id,
           choices = c("", years_),
           selected = "",
           multiple = FALSE
-        ),
-        numericInput(
-          inputId = NS(id, "answer_counts"),
-          label = "Minimum Answer Counts",
-          value = 0,
-          min = 0,
-          step = 1
         )
       )
     ),
@@ -173,9 +176,9 @@ modWordListServer <- function(id, dt_words_, max_date_){
           dt <- dt[is.na(Date)]
         }
 
-        dt <- dt[Counts >= input$answer_counts]
+        dt <- dt[`Answer Counts` >= input$answer_counts]
 
-        dt[, Counts := as.integer(Counts)]
+        dt[, `Answer Counts` := as.integer(`Answer Counts`)]
 
         # this has to come last to remove today's Wordle answer Date since
         # it converts dates to character strings that would otherwise break other logic for filtering
@@ -192,7 +195,7 @@ modWordListServer <- function(id, dt_words_, max_date_){
         } else {
 
           DT::datatable(
-            dt()[,.(Word, Date, Index, Counts)],
+            dt()[,.(Word, Date, Index, `Answer Counts`)],
             rownames = FALSE,
             class = 'compact',
             callback = JS("$(document).ready(function() {

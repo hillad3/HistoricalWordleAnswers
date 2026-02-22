@@ -171,3 +171,7 @@ rebuild_website_word_list <- function() {
 
   DBI::dbExecute(con, sql)
 }
+
+# execute the key scripts
+update_db_wordle()
+rebuild_website_word_list()
