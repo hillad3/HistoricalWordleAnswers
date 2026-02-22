@@ -57,12 +57,12 @@ if(todays_count == 0L){
         Word = todays_word,
         Date = as.Date(NA),
         Index = NA_integer_,
-        Counts = 0
+        Counts = 0L
       )
     )
   )
 } else if(todays_count >= 1L){
-  ans[, Counts := fifelse(is.na(Date),0,.N), by = Word]
+  ans[, Counts := fifelse(is.na(Date),0L,.N), by = Word]
 }
 
 

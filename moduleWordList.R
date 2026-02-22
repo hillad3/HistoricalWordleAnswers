@@ -11,7 +11,7 @@ modWordListUI <- function(id,
       "Wordle Answer list refreshed as of ",
       max(dt_words_[!is.na(Date)]$Date)," (",
       days_since_last_update_,
-      ifelse(days_since_last_update_<=1," day ago)."," days ago)."),
+      fifelse(days_since_last_update_<=1," day ago)."," days ago)."),
       " Today's word will not be displayed to prevent spoilers.")
     ),
     tags$div(
@@ -175,9 +175,11 @@ modWordListServer <- function(id, dt_words_, max_date_){
 
         dt <- dt[Counts >= input$answer_counts]
 
+        dt[, Counts := as.integer(Counts)]
+
         # this has to come last to remove today's Wordle answer Date since
         # it converts dates to character strings that would otherwise break other logic for filtering
-        dt[,Date:=ifelse(!is.na(Date) & is.na(Index),NA_character_,as.character(Date))]
+        dt[,Date:=fifelse(!is.na(Date) & is.na(Index),NA_character_,as.character(Date))]
 
         dt
 
