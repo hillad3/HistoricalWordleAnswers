@@ -99,14 +99,13 @@ modWordListUI <- function(id,
           selected = "",
           multiple = FALSE
         ),
-        shinyWidgets::materialSwitch(
-          inputId = NS(id,"check_dups"),
-          label = "Check for Duplicates",
-          value = FALSE,
-          inline = TRUE,
-          status = "success"
-        ),
-        if(!dups_present_){tags$p(paste0("No repeats identified as of ",max(dt_words_[!is.na(Date)]$Date)), style = "font-size:90%")}
+        numericInput(
+          inputId = NS(id, "answer_counts"),
+          label = "Minimum Answer Counts",
+          value = 0,
+          min = 0,
+          step = 1
+        )
       )
     ),
     br(),
@@ -174,9 +173,7 @@ modWordListServer <- function(id, dt_words_, max_date_){
           dt <- dt[is.na(Date)]
         }
 
-        if(input$check_dups){
-          dt <- dt[duplicated(Word)]
-        }
+        dt <- dt[Counts >= input$answer_counts]
 
         # this has to come last to remove today's Wordle answer Date since
         # it converts dates to character strings that would otherwise break other logic for filtering
@@ -193,7 +190,7 @@ modWordListServer <- function(id, dt_words_, max_date_){
         } else {
 
           DT::datatable(
-            dt()[,.(Word, Date, Index)],
+            dt()[,.(Word, Date, Index, Counts)],
             rownames = FALSE,
             class = 'compact',
             callback = JS("$(document).ready(function() {
@@ -301,10 +298,10 @@ modWordListServer <- function(id, dt_words_, max_date_){
             value = FALSE
           )
 
-          updateMaterialSwitch(
+          updateNumericInput(
             session,
-            inputId = "check_dups",
-            value = FALSE
+            inputId = "answer_counts",
+            value = 0
           )
         }
       )

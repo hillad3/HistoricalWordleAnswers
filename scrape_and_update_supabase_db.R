@@ -137,9 +137,9 @@ rebuild_website_word_list <- function() {
         FROM wordle_answers
     ),
     scrabble AS (
-        SELECT
-            word
+        SELECT word
         FROM five_letter_scrabble_words
+        WHERE word NOT IN (SELECT word FROM wordle_answers)
     ),
     combined AS (
         -- keep all Wordle rows (including repeats)

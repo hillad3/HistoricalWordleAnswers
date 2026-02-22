@@ -30,7 +30,7 @@ sys_date <- as.Date(with_tz(Sys.time(), "US/Eastern"), tz = "US/Eastern")
 
 # preliminary values; may be refreshed if db is not up to date
 ans <- DBI::dbGetQuery(con, "SELECT * FROM website_word_list ORDER BY word") |> as.data.table()
-setnames(ans, old = c("date","index","word"), new = c("Date","Index","Word"))
+setnames(ans, old = c("date","index","word", "count"), new = c("Date","Index","Word", "Counts"))
 
 DBI::dbDisconnect(con)
 rm(con)
@@ -39,10 +39,31 @@ days_since_last_update <- as.integer(as.POSIXct(sys_date) - as.POSIXct(max(ans[!
 years <- unique(ans[,.(lubridate::year(Date))]) |> unlist() |> sort(decreasing=TRUE) |> as.character()
 dups_present <- dim(ans[duplicated(Word)])[1]>0
 
+# the wordle list needs to be adjusted based on whether the answer is a repeat value or it has replaced
+# a scrabble word. the following code keeps track of this word and then replaces or updates the counts
+# as needed
+todays_word <- ans[Date == sys_date, (Word)]
 
-# if applicable, remove the Index of today's Wordle Answer. This is a breadcrumb to help remove the date
-# value later, but I had problems when setting it to NA here, so doing it just before displaying
-ans <- ans[, Index := ifelse(Date >= sys_date, as.integer(NA), Index)]
+# remove today's word and get counts
+ans <- ans[is.na(Date) | Date != sys_date]
+todays_count <- ans[Word == todays_word, .N]
+
+if(todays_count == 0L){
+  # if the word is no longer there, then add it back as if it is a scrabble word
+  ans <- rbindlist(
+    list(
+      ans,
+      data.table(
+        Word = todays_word,
+        Date = as.Date(NA),
+        Index = NA_integer_,
+        Counts = 0
+      )
+    )
+  )
+} else if(todays_count >= 1L){
+  ans[, Counts := fifelse(is.na(Date),0,.N), by = Word]
+}
 
 
 main_theme <- bs_theme(
